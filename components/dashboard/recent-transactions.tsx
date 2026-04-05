@@ -6,7 +6,8 @@ interface Transaction {
   date: string
   type: "depense" | "retrait"
   categories?: { nom: string } | null
-  source?: string
+  designation?: string | null
+  motif?: string | null
 }
 
 interface RecentTransactionsProps {
@@ -60,7 +61,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                     <p className="font-medium text-foreground">
                       {transaction.type === "depense"
                         ? transaction.categories?.nom || "Dépense"
-                        : transaction.source || "Retrait"}
+                        : transaction.designation || "Retrait"}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       {formatDate(transaction.date)}

@@ -16,7 +16,7 @@ export default async function DashboardPage() {
       .order("date", { ascending: false }),
     supabase
       .from("retraits")
-      .select("montant, date, source")
+      .select("montant, date, designation, motif")
       .eq("user_id", user?.id)
       .order("date", { ascending: false }),
     supabase

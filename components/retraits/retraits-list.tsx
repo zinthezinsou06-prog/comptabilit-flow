@@ -31,8 +31,8 @@ interface Retrait {
   id: string
   montant: number
   date: string
-  source: string | null
-  description: string | null
+  designation: string | null
+  motif: string | null
 }
 
 interface RetraitsListProps {
@@ -85,8 +85,8 @@ export function RetraitsList({ retraits }: RetraitsListProps) {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Date</TableHead>
-                    <TableHead>Source</TableHead>
-                    <TableHead>Description</TableHead>
+                    <TableHead>Désignation</TableHead>
+                    <TableHead>Motif</TableHead>
                     <TableHead className="text-right">Montant</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -95,9 +95,9 @@ export function RetraitsList({ retraits }: RetraitsListProps) {
                   {retraits.map((retrait) => (
                     <TableRow key={retrait.id}>
                       <TableCell>{formatDate(retrait.date)}</TableCell>
-                      <TableCell>{retrait.source || "-"}</TableCell>
+                      <TableCell>{retrait.designation || "-"}</TableCell>
                       <TableCell className="max-w-[200px] truncate">
-                        {retrait.description || "-"}
+                        {retrait.motif || "-"}
                       </TableCell>
                       <TableCell className="text-right font-medium text-accent">
                         +{formatCurrency(retrait.montant)}

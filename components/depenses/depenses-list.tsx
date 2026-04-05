@@ -31,7 +31,7 @@ interface Depense {
   id: string
   montant: number
   date: string
-  description: string | null
+  designation: string | null
   categorie_id: string | null
   categories: { nom: string } | null
 }
@@ -93,7 +93,7 @@ export function DepensesList({ depenses, categories }: DepensesListProps) {
                   <TableRow>
                     <TableHead>Date</TableHead>
                     <TableHead>Catégorie</TableHead>
-                    <TableHead>Description</TableHead>
+                    <TableHead>Désignation</TableHead>
                     <TableHead className="text-right">Montant</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -104,7 +104,7 @@ export function DepensesList({ depenses, categories }: DepensesListProps) {
                       <TableCell>{formatDate(depense.date)}</TableCell>
                       <TableCell>{depense.categories?.nom || "-"}</TableCell>
                       <TableCell className="max-w-[200px] truncate">
-                        {depense.description || "-"}
+                        {depense.designation || "-"}
                       </TableCell>
                       <TableCell className="text-right font-medium text-destructive">
                         {formatCurrency(depense.montant)}

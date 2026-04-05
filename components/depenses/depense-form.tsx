@@ -38,7 +38,7 @@ export function DepenseForm({ categories }: DepenseFormProps) {
   const [montant, setMontant] = useState("")
   const [date, setDate] = useState(new Date().toISOString().split("T")[0])
   const [categorieId, setCategorieId] = useState("")
-  const [description, setDescription] = useState("")
+  const [designation, setDesignation] = useState("")
   const router = useRouter()
   const supabase = createClient()
 
@@ -48,26 +48,27 @@ export function DepenseForm({ categories }: DepenseFormProps) {
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    await supabase.from("depenses").insert({
+    const { data: newDepense } = await supabase.from("depenses").insert({
       montant: parseFloat(montant),
       date,
       categorie_id: categorieId || null,
-      description: description || null,
+      designation: designation || null,
       user_id: user?.id,
-    })
+    }).select().single()
 
     // Log action
     await supabase.from("logs").insert({
       user_id: user?.id,
       action: "CREATE",
-      table_name: "depenses",
-      details: `Ajout dépense: ${montant}€`,
+      table_concernee: "depenses",
+      enregistrement_id: newDepense?.id,
+      details: { montant: parseFloat(montant), designation, categorie_id: categorieId },
     })
 
     setMontant("")
     setDate(new Date().toISOString().split("T")[0])
     setCategorieId("")
-    setDescription("")
+    setDesignation("")
     setIsLoading(false)
     setOpen(false)
     router.refresh()
@@ -125,12 +126,12 @@ export function DepenseForm({ categories }: DepenseFormProps) {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="designation">Désignation</Label>
             <Textarea
-              id="description"
-              placeholder="Description de la dépense..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              id="designation"
+              placeholder="Désignation de la dépense..."
+              value={designation}
+              onChange={(e) => setDesignation(e.target.value)}
               rows={3}
             />
           </div>

@@ -26,7 +26,7 @@ interface Depense {
   id: string
   montant: number
   date: string
-  description: string | null
+  designation: string | null
   categorie_id: string | null
 }
 
@@ -47,7 +47,7 @@ export function DepenseEditForm({ depense, categories, open, onClose }: DepenseE
   const [montant, setMontant] = useState(depense.montant.toString())
   const [date, setDate] = useState(depense.date)
   const [categorieId, setCategorieId] = useState(depense.categorie_id || "")
-  const [description, setDescription] = useState(depense.description || "")
+  const [designation, setDesignation] = useState(depense.designation || "")
   const router = useRouter()
   const supabase = createClient()
 
@@ -63,7 +63,7 @@ export function DepenseEditForm({ depense, categories, open, onClose }: DepenseE
         montant: parseFloat(montant),
         date,
         categorie_id: categorieId || null,
-        description: description || null,
+        designation: designation || null,
       })
       .eq("id", depense.id)
 
@@ -71,8 +71,9 @@ export function DepenseEditForm({ depense, categories, open, onClose }: DepenseE
     await supabase.from("logs").insert({
       user_id: user?.id,
       action: "UPDATE",
-      table_name: "depenses",
-      details: `Modification dépense: ${montant}€`,
+      table_concernee: "depenses",
+      enregistrement_id: depense.id,
+      details: { montant: parseFloat(montant), designation, categorie_id: categorieId },
     })
 
     setIsLoading(false)
@@ -126,12 +127,12 @@ export function DepenseEditForm({ depense, categories, open, onClose }: DepenseE
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="designation">Désignation</Label>
             <Textarea
-              id="description"
-              placeholder="Description de la dépense..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              id="designation"
+              placeholder="Désignation de la dépense..."
+              value={designation}
+              onChange={(e) => setDesignation(e.target.value)}
               rows={3}
             />
           </div>

@@ -14,10 +14,10 @@ interface Transaction {
   id: string
   montant: number
   date: string
-  description?: string | null
+  designation?: string | null
+  motif?: string | null
   type: "depense" | "retrait"
   categories?: { nom: string } | null
-  source?: string | null
 }
 
 interface ReportsTableProps {
@@ -78,10 +78,12 @@ export function ReportsTable({ transactions }: ReportsTableProps) {
                     <TableCell>
                       {transaction.type === "depense"
                         ? transaction.categories?.nom || "-"
-                        : transaction.source || "-"}
+                        : transaction.designation || "-"}
                     </TableCell>
                     <TableCell className="max-w-[200px] truncate">
-                      {transaction.description || "-"}
+                      {transaction.type === "depense" 
+                        ? transaction.designation || "-"
+                        : transaction.motif || "-"}
                     </TableCell>
                     <TableCell
                       className={`text-right font-medium ${

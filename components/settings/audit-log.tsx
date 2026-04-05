@@ -13,9 +13,9 @@ import { History } from "lucide-react"
 interface Log {
   id: string
   action: string
-  table_name: string
-  details: string | null
-  created_at: string
+  table_concernee: string
+  details: Record<string, unknown> | null
+  timestamp: string
 }
 
 interface AuditLogProps {
@@ -96,16 +96,16 @@ export function AuditLog({ logs }: AuditLogProps) {
                 {logs.map((log) => (
                   <TableRow key={log.id}>
                     <TableCell className="whitespace-nowrap">
-                      {formatDate(log.created_at)}
+                      {formatDate(log.timestamp)}
                     </TableCell>
                     <TableCell>
                       <Badge className={getActionColor(log.action)}>
                         {getActionLabel(log.action)}
                       </Badge>
                     </TableCell>
-                    <TableCell>{getTableLabel(log.table_name)}</TableCell>
+                    <TableCell>{getTableLabel(log.table_concernee)}</TableCell>
                     <TableCell className="max-w-[300px] truncate">
-                      {log.details || "-"}
+                      {log.details ? JSON.stringify(log.details) : "-"}
                     </TableCell>
                   </TableRow>
                 ))}

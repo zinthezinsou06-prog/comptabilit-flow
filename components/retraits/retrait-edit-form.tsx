@@ -19,8 +19,8 @@ interface Retrait {
   id: string
   montant: number
   date: string
-  source: string | null
-  description: string | null
+  designation: string | null
+  motif: string | null
 }
 
 interface RetraitEditFormProps {
@@ -33,8 +33,8 @@ export function RetraitEditForm({ retrait, open, onClose }: RetraitEditFormProps
   const [isLoading, setIsLoading] = useState(false)
   const [montant, setMontant] = useState(retrait.montant.toString())
   const [date, setDate] = useState(retrait.date)
-  const [source, setSource] = useState(retrait.source || "")
-  const [description, setDescription] = useState(retrait.description || "")
+  const [designation, setDesignation] = useState(retrait.designation || "")
+  const [motif, setMotif] = useState(retrait.motif || "")
   const router = useRouter()
   const supabase = createClient()
 
@@ -49,8 +49,8 @@ export function RetraitEditForm({ retrait, open, onClose }: RetraitEditFormProps
       .update({
         montant: parseFloat(montant),
         date,
-        source: source || null,
-        description: description || null,
+        designation: designation || null,
+        motif: motif || null,
       })
       .eq("id", retrait.id)
 
@@ -58,8 +58,9 @@ export function RetraitEditForm({ retrait, open, onClose }: RetraitEditFormProps
     await supabase.from("logs").insert({
       user_id: user?.id,
       action: "UPDATE",
-      table_name: "retraits",
-      details: `Modification retrait: ${montant}€`,
+      table_concernee: "retraits",
+      enregistrement_id: retrait.id,
+      details: { montant: parseFloat(montant), designation, motif },
     })
 
     setIsLoading(false)
@@ -98,21 +99,21 @@ export function RetraitEditForm({ retrait, open, onClose }: RetraitEditFormProps
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="source">Source</Label>
+            <Label htmlFor="designation">Désignation</Label>
             <Input
-              id="source"
-              placeholder="Ex: Banque, Client, etc."
-              value={source}
-              onChange={(e) => setSource(e.target.value)}
+              id="designation"
+              placeholder="Ex: Virement, Paiement client, etc."
+              value={designation}
+              onChange={(e) => setDesignation(e.target.value)}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="motif">Motif</Label>
             <Textarea
-              id="description"
-              placeholder="Description du retrait..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              id="motif"
+              placeholder="Motif du retrait..."
+              value={motif}
+              onChange={(e) => setMotif(e.target.value)}
               rows={3}
             />
           </div>
