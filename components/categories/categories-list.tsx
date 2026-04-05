@@ -1,0 +1,129 @@
+"use client"
+
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Pencil, Trash2, Loader2, FolderOpen } from "lucide-react"
+import { CategoryEditForm } from "./category-edit-form"
+
+interface Category {
+  id: string
+  nom: string
+  description: string | null
+}
+
+interface CategoriesListProps {
+  categories: Category[]
+}
+
+export function CategoriesList({ categories }: CategoriesListProps) {
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const router = useRouter()
+  const supabase = createClient()
+
+  async function handleDelete(id: string) {
+    setDeletingId(id)
+    await supabase.from("categories").delete().eq("id", id)
+    router.refresh()
+    setDeletingId(null)
+  }
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Liste des catégories</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {categories.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {categories.map((category) => (
+                <div
+                  key={category.id}
+                  className="flex items-center justify-between rounded-lg border border-border p-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                      <FolderOpen className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{category.nom}</p>
+                      {category.description && (
+                        <p className="text-sm text-muted-foreground">{category.description}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setEditingCategory(category)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                      <span className="sr-only">Modifier</span>
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <span className="sr-only">Supprimer</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Supprimer la catégorie ?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Cette action est irréversible. Les dépenses liées à cette catégorie ne seront plus catégorisées.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(category.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            {deletingId === category.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              "Supprimer"
+                            )}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-muted-foreground">
+              Aucune catégorie créée
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {editingCategory && (
+        <CategoryEditForm
+          category={editingCategory}
+          open={!!editingCategory}
+          onClose={() => setEditingCategory(null)}
+        />
+      )}
+    </>
+  )
+}
