@@ -4,15 +4,6 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Pencil, Trash2, Loader2 } from "lucide-react"
+import { Pencil, Trash2, Loader2, ArrowDownCircle } from "lucide-react"
 import { RetraitEditForm } from "./retrait-edit-form"
 import { TableExportButton } from "@/components/import-export/table-export-button"
 
@@ -56,7 +47,7 @@ export function RetraitsList({ retraits }: RetraitsListProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("fr-FR", {
       day: "numeric",
-      month: "long",
+      month: "short",
       year: "numeric",
     })
   }
@@ -65,35 +56,27 @@ export function RetraitsList({ retraits }: RetraitsListProps) {
     setDeletingId(id)
     try {
       const { data: { user } } = await supabase.auth.getUser()
-
       const { error: deleteError } = await supabase.from("retraits").delete().eq("id", id)
 
       if (deleteError) {
-        console.error("Error deleting retrait:", deleteError)
         alert("Erreur lors de la suppression: " + deleteError.message)
         setDeletingId(null)
         return
       }
 
-      // Log action
       if (user) {
-        const { error: logError } = await supabase.from("logs").insert({
+        await supabase.from("logs").insert({
           user_id: user.id,
           action: "DELETE",
           table_concernee: "retraits",
           enregistrement_id: id,
           details: { deleted_at: new Date().toISOString() },
         })
-
-        if (logError) {
-          console.error("Error logging action:", logError)
-        }
       }
 
       router.refresh()
       setDeletingId(null)
     } catch (error) {
-      console.error("Unexpected error:", error)
       alert("Une erreur inattendue s'est produite")
       setDeletingId(null)
     }
@@ -104,9 +87,9 @@ export function RetraitsList({ retraits }: RetraitsListProps) {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Liste des retraits</CardTitle>
-          <div className="flex items-center gap-4">
+        <CardHeader className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <CardTitle className="text-base">Liste des retraits</CardTitle>
+          <div className="flex items-center justify-between gap-3 sm:justify-end">
             <TableExportButton
               data={retraits.map(r => ({
                 Date: formatDate(r.date),
@@ -117,84 +100,88 @@ export function RetraitsList({ retraits }: RetraitsListProps) {
               filename={`retraits_${new Date().toISOString().split("T")[0]}`}
               sheetName="Retraits"
             />
-            <div className="text-lg font-semibold text-accent">
-              Total: {formatCurrency(totalRetraits)}
+            <div className="text-base font-semibold text-accent">
+              +{formatCurrency(totalRetraits)}
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-0 pb-0">
           {retraits.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Désignation</TableHead>
-                    <TableHead>Motif</TableHead>
-                    <TableHead className="text-right">Montant</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {retraits.map((retrait) => (
-                    <TableRow key={retrait.id}>
-                      <TableCell>{formatDate(retrait.date)}</TableCell>
-                      <TableCell>{retrait.designation || "-"}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">
-                        {retrait.motif || "-"}
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-accent">
+            <div className="divide-y divide-border">
+              {retraits.map((retrait) => (
+                <div key={retrait.id} className="flex items-center gap-3 px-4 py-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/10">
+                    <ArrowDownCircle className="h-4 w-4 text-accent" />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          {retrait.designation || "Retrait"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {retrait.motif
+                            ? `${retrait.motif} · ${formatDate(retrait.date)}`
+                            : formatDate(retrait.date)
+                          }
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-sm font-semibold text-accent">
                         +{formatCurrency(retrait.montant)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setEditingRetrait(retrait)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      onClick={() => setEditingRetrait(retrait)}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors active:bg-muted"
+                      aria-label="Modifier"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-destructive/60 transition-colors active:bg-destructive/10"
+                          aria-label="Supprimer"
+                        >
+                          {deletingId === retrait.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="mx-4 rounded-2xl sm:mx-auto">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Supprimer le retrait ?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Cette action est irréversible.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
+                          <AlertDialogCancel className="mt-0 w-full sm:w-auto">
+                            Annuler
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(retrait.id)}
+                            className="w-full bg-destructive text-destructive-foreground sm:w-auto"
                           >
-                            <Pencil className="h-4 w-4" />
-                            <span className="sr-only">Modifier</span>
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                                <span className="sr-only">Supprimer</span>
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Supprimer le retrait ?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Cette action est irréversible. Le retrait sera définitivement supprimé.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Annuler</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleDelete(retrait.id)}
-                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                >
-                                  {deletingId === retrait.id ? (
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                  ) : (
-                                    "Supprimer"
-                                  )}
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                            Supprimer
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="py-8 text-center text-muted-foreground">
-              Aucun retrait enregistré
+            <div className="px-4 py-12 text-center text-muted-foreground">
+              <ArrowDownCircle className="mx-auto mb-3 h-10 w-10 opacity-30" />
+              <p className="text-sm">Aucun retrait enregistré</p>
             </div>
           )}
         </CardContent>
