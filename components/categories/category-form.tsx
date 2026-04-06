@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -72,6 +73,9 @@ export function CategoryForm() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Ajouter une catégorie</DialogTitle>
+          <DialogDescription>
+            Créez une nouvelle catégorie pour organiser vos dépenses.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

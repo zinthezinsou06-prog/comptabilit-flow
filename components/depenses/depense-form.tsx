@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -110,6 +111,9 @@ export function DepenseForm({ categories }: DepenseFormProps) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Ajouter une dépense</DialogTitle>
+          <DialogDescription>
+            Enregistrez une nouvelle dépense dans votre comptabilité.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
