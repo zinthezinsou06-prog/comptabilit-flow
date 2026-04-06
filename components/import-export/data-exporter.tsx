@@ -14,6 +14,17 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
   Download,
   FileSpreadsheet,
   FileText,
@@ -25,11 +36,22 @@ import {
   FolderOpen,
   History,
   Database,
+  Settings2,
+  Printer,
 } from "lucide-react"
 import * as XLSX from "xlsx"
 
 type DataType = "depenses" | "retraits" | "categories" | "logs" | "all"
-type ExportFormat = "xlsx" | "csv"
+type ExportFormat = "xlsx" | "csv" | "pdf"
+
+interface PDFCustomHeader {
+  companyName: string
+  subtitle: string
+  address: string
+  phone: string
+  email: string
+  logo: string
+}
 
 interface ExportState {
   dataType: DataType
@@ -81,6 +103,16 @@ export function DataExporter() {
     error: null,
     success: false,
     exportedCount: 0,
+  })
+  
+  const [showPdfDialog, setShowPdfDialog] = useState(false)
+  const [pdfHeader, setPdfHeader] = useState<PDFCustomHeader>({
+    companyName: "Mon Entreprise",
+    subtitle: "Export de données",
+    address: "",
+    phone: "",
+    email: "",
+    logo: "",
   })
 
   const supabase = createClient()
@@ -151,6 +183,124 @@ export function DataExporter() {
     ]
     
     downloadFile(csvRows.join("\n"), `${filename}.csv`, "text/csv;charset=utf-8;")
+  }
+
+  const exportToPDF = (data: Record<string, unknown>[], title: string) => {
+    if (data.length === 0) return
+
+    const printWindow = window.open("", "_blank")
+    if (!printWindow) return
+
+    const headers = Object.keys(data[0])
+    const headerContactInfo = [
+      pdfHeader.address,
+      pdfHeader.phone,
+      pdfHeader.email,
+    ].filter(Boolean).join(" | ")
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${pdfHeader.companyName} - ${title}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            .header { 
+              border-bottom: 2px solid #333; 
+              padding-bottom: 15px; 
+              margin-bottom: 20px; 
+            }
+            .header-top {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 10px;
+            }
+            .company-info h1 { 
+              color: #333; 
+              margin: 0; 
+              font-size: 24px; 
+            }
+            .company-info h2 { 
+              color: #666; 
+              margin: 5px 0 0 0; 
+              font-size: 16px; 
+              font-weight: normal;
+            }
+            .contact-info { 
+              color: #666; 
+              font-size: 12px; 
+              margin-top: 8px;
+            }
+            .logo img { 
+              max-height: 60px; 
+              max-width: 150px; 
+            }
+            .date-export { 
+              color: #666; 
+              font-size: 14px; 
+              margin-bottom: 15px;
+            }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+            th { background: #f5f5f5; font-weight: bold; }
+            .total-row { font-weight: bold; background: #f0f0f0; }
+            .footer {
+              margin-top: 30px;
+              padding-top: 15px;
+              border-top: 1px solid #ddd;
+              text-align: center;
+              font-size: 11px;
+              color: #999;
+            }
+            @media print { 
+              body { padding: 0; }
+              .header { page-break-after: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="header-top">
+              <div class="company-info">
+                <h1>${pdfHeader.companyName}</h1>
+                <h2>${pdfHeader.subtitle} - ${title}</h2>
+                ${headerContactInfo ? `<div class="contact-info">${headerContactInfo}</div>` : ""}
+              </div>
+              ${pdfHeader.logo ? `<div class="logo"><img src="${pdfHeader.logo}" alt="Logo" /></div>` : ""}
+            </div>
+          </div>
+          
+          <p class="date-export">Exporté le ${new Date().toLocaleDateString("fr-FR")} - ${data.length} enregistrement(s)</p>
+
+          <table>
+            <thead>
+              <tr>
+                ${headers.map(h => `<th>${h}</th>`).join("")}
+              </tr>
+            </thead>
+            <tbody>
+              ${data.map(row => `
+                <tr>
+                  ${headers.map(h => `<td>${String(row[h] ?? "-")}</td>`).join("")}
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            Document généré le ${new Date().toLocaleDateString("fr-FR")} à ${new Date().toLocaleTimeString("fr-FR")}
+            ${pdfHeader.companyName ? ` - ${pdfHeader.companyName}` : ""}
+          </div>
+
+          <script>window.onload = function() { window.print(); }</script>
+        </body>
+      </html>
+    `
+
+    printWindow.document.write(html)
+    printWindow.document.close()
+    setShowPdfDialog(false)
   }
 
   const handleExport = async () => {
@@ -304,8 +454,10 @@ export function DataExporter() {
 
         if (state.format === "xlsx") {
           exportToExcel(data, dataTypeConfig[state.dataType].label, filename)
-        } else {
+        } else if (state.format === "csv") {
           exportToCSV(data, filename)
+        } else if (state.format === "pdf") {
+          exportToPDF(data, dataTypeConfig[state.dataType].label)
         }
       }
 
@@ -407,6 +559,12 @@ export function DataExporter() {
                       CSV (.csv)
                     </div>
                   </SelectItem>
+                  <SelectItem value="pdf">
+                    <div className="flex items-center gap-2">
+                      <Printer className="h-4 w-4" />
+                      PDF (Personnalisable)
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
               {state.dataType === "all" && (
@@ -459,24 +617,36 @@ export function DataExporter() {
             </Alert>
           )}
 
-          {/* Export Button */}
-          <Button
-            onClick={handleExport}
-            disabled={state.isExporting}
-            className="w-full sm:w-auto"
-          >
-            {state.isExporting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Export en cours...
-              </>
-            ) : (
-              <>
-                <Download className="mr-2 h-4 w-4" />
-                Exporter les {config.label.toLowerCase()}
-              </>
+          {/* Export Buttons */}
+          <div className="flex flex-wrap gap-2">
+            {state.format === "pdf" && (
+              <Button
+                variant="outline"
+                onClick={() => setShowPdfDialog(true)}
+                disabled={state.isExporting}
+              >
+                <Settings2 className="mr-2 h-4 w-4" />
+                Personnaliser l&apos;en-tête
+              </Button>
             )}
-          </Button>
+            <Button
+              onClick={handleExport}
+              disabled={state.isExporting}
+              className="w-full sm:w-auto"
+            >
+              {state.isExporting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Export en cours...
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Exporter les {config.label.toLowerCase()}
+                </>
+              )}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -506,6 +676,100 @@ export function DataExporter() {
           )
         })}
       </div>
+
+      {/* Dialog de personnalisation PDF */}
+      <Dialog open={showPdfDialog} onOpenChange={setShowPdfDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings2 className="h-5 w-5" />
+              Personnaliser l&apos;en-tête PDF
+            </DialogTitle>
+            <DialogDescription>
+              Configurez l&apos;en-tête de votre document PDF avant l&apos;export.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="companyName">Nom de l&apos;entreprise / Titre</Label>
+              <Input
+                id="companyName"
+                value={pdfHeader.companyName}
+                onChange={(e) => setPdfHeader(prev => ({ ...prev, companyName: e.target.value }))}
+                placeholder="Mon Entreprise"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="subtitle">Sous-titre du document</Label>
+              <Input
+                id="subtitle"
+                value={pdfHeader.subtitle}
+                onChange={(e) => setPdfHeader(prev => ({ ...prev, subtitle: e.target.value }))}
+                placeholder="Export de données"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="address">Adresse</Label>
+              <Textarea
+                id="address"
+                value={pdfHeader.address}
+                onChange={(e) => setPdfHeader(prev => ({ ...prev, address: e.target.value }))}
+                placeholder="123 Rue Example, 75000 Paris"
+                rows={2}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="phone">Téléphone</Label>
+                <Input
+                  id="phone"
+                  value={pdfHeader.phone}
+                  onChange={(e) => setPdfHeader(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="+33 1 23 45 67 89"
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={pdfHeader.email}
+                  onChange={(e) => setPdfHeader(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="contact@example.com"
+                />
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="logo">URL du logo (optionnel)</Label>
+              <Input
+                id="logo"
+                value={pdfHeader.logo}
+                onChange={(e) => setPdfHeader(prev => ({ ...prev, logo: e.target.value }))}
+                placeholder="https://example.com/logo.png"
+              />
+              <p className="text-xs text-muted-foreground">
+                Entrez l&apos;URL d&apos;une image pour l&apos;afficher en haut à droite du document.
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPdfDialog(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleExport}>
+              <Printer className="mr-2 h-4 w-4" />
+              Générer le PDF
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

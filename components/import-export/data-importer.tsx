@@ -45,6 +45,7 @@ interface ValidationError {
   row: number
   field: string
   message: string
+  severity: "error" | "warning"
 }
 
 interface ImportState {
@@ -161,6 +162,7 @@ export function DataImporter() {
           row: 0,
           field: "file",
           message: error instanceof Error ? error.message : "Erreur lors de la lecture du fichier",
+          severity: "error", // Erreur de parsing est bloquante
         }],
       }))
     }
@@ -171,32 +173,41 @@ export function DataImporter() {
     const errors: ValidationError[] = []
 
     data.forEach((row, index) => {
-      // Check required fields
+      // Check required fields - these are warnings, not blocking errors
       config.requiredFields.forEach(field => {
         const value = row[field]
         if (value === undefined || value === null || value === "") {
           errors.push({
             row: index + 2, // +2 because of header row and 0-index
             field,
-            message: `Le champ "${field}" est requis`,
+            message: `Le champ "${field}" est vide`,
+            severity: "warning", // Avertissement - n'empêche pas l'import
           })
         }
       })
 
-      // Validate montant is a number
-      if (row.montant !== undefined) {
+      // Validate montant is a number - warning for invalid values
+      if (row.montant !== undefined && row.montant !== null && row.montant !== "") {
         const montant = parseFloat(String(row.montant).replace(",", "."))
-        if (isNaN(montant) || montant < 0) {
+        if (isNaN(montant)) {
           errors.push({
             row: index + 2,
             field: "montant",
-            message: "Le montant doit être un nombre positif",
+            message: "Le montant n'est pas un nombre valide",
+            severity: "warning",
+          })
+        } else if (montant < 0) {
+          errors.push({
+            row: index + 2,
+            field: "montant",
+            message: "Le montant est négatif",
+            severity: "warning",
           })
         }
       }
 
-      // Validate date format
-      if (row.date !== undefined) {
+      // Validate date format - warning for invalid dates
+      if (row.date !== undefined && row.date !== null && row.date !== "") {
         const dateStr = String(row.date)
         const dateRegex = /^\d{4}-\d{2}-\d{2}$|^\d{2}\/\d{2}\/\d{4}$/
         if (!dateRegex.test(dateStr)) {
@@ -206,7 +217,8 @@ export function DataImporter() {
             errors.push({
               row: index + 2,
               field: "date",
-              message: "Format de date invalide (attendu: AAAA-MM-JJ)",
+              message: "Format de date non reconnu (utilise la date du jour)",
+              severity: "warning",
             })
           }
         }
@@ -234,6 +246,7 @@ export function DataImporter() {
           row: 0,
           field: "file",
           message: "Type de fichier non supporté. Utilisez .xlsx, .xls ou .csv",
+          severity: "error", // Type de fichier incorrect est bloquant
         }],
       }))
       return
@@ -255,6 +268,7 @@ export function DataImporter() {
           row: 0,
           field: "file",
           message: "Type de fichier non supporté. Utilisez .xlsx, .xls ou .csv",
+          severity: "error",
         }],
       }))
       return
@@ -268,7 +282,12 @@ export function DataImporter() {
     event.preventDefault()
   }
 
-  const formatDate = (dateStr: string): string => {
+  const formatDate = (dateStr: string | null | undefined): string => {
+    // Si pas de date, utiliser la date du jour
+    if (!dateStr || dateStr === "") {
+      return new Date().toISOString().split("T")[0]
+    }
+    
     // Handle various date formats
     const date = new Date(dateStr)
     if (!isNaN(date.getTime())) {
@@ -279,11 +298,17 @@ export function DataImporter() {
     if (parts.length === 3) {
       return `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`
     }
-    return dateStr
+    // Si format non reconnu, utiliser la date du jour
+    return new Date().toISOString().split("T")[0]
   }
 
+  // Vérifier s'il y a des erreurs critiques (pas d'avertissements)
+  const hasCriticalErrors = state.validationErrors.some(e => e.severity === "error")
+  const warningsCount = state.validationErrors.filter(e => e.severity === "warning").length
+
   const handleImport = async () => {
-    if (state.validationErrors.length > 0) return
+    // Seules les erreurs critiques bloquent l'import
+    if (hasCriticalErrors) return
 
     setState(prev => ({ ...prev, isImporting: true, step: "importing", importProgress: 0 }))
 
@@ -307,11 +332,15 @@ export function DataImporter() {
           const row = state.parsedData[i]
           const categorieNom = String(row.categorie || "").toLowerCase()
           
+          // Gestion des valeurs manquantes ou invalides
+          const montantStr = String(row.montant || "0").replace(",", ".")
+          const montant = parseFloat(montantStr) || 0
+
           const { error } = await supabase.from("depenses").insert({
             user_id: user.id,
-            date: formatDate(String(row.date)),
+            date: formatDate(row.date as string),
             designation: row.designation || null,
-            montant: parseFloat(String(row.montant).replace(",", ".")),
+            montant: Math.abs(montant), // Toujours positif
             categorie_id: categoryMap.get(categorieNom) || null,
           })
 
@@ -322,11 +351,15 @@ export function DataImporter() {
         for (let i = 0; i < state.parsedData.length; i++) {
           const row = state.parsedData[i]
           
+          // Gestion des valeurs manquantes ou invalides
+          const montantStr = String(row.montant || "0").replace(",", ".")
+          const montant = parseFloat(montantStr) || 0
+
           const { error } = await supabase.from("retraits").insert({
             user_id: user.id,
-            date: formatDate(String(row.date)),
+            date: formatDate(row.date as string),
             designation: row.designation || null,
-            montant: parseFloat(String(row.montant).replace(",", ".")),
+            montant: Math.abs(montant), // Toujours positif
             motif: row.motif || null,
           })
 
@@ -372,10 +405,12 @@ export function DataImporter() {
       setState(prev => ({
         ...prev,
         isImporting: false,
+        step: "preview",
         validationErrors: [{
           row: 0,
           field: "import",
           message: error instanceof Error ? error.message : "Erreur lors de l'import",
+          severity: "error",
         }],
       }))
     }
@@ -502,21 +537,44 @@ export function DataImporter() {
         </Card>
       )}
 
-      {/* Validation Errors */}
-      {state.validationErrors.length > 0 && state.step !== "complete" && (
+      {/* Validation Errors (critical) */}
+      {state.validationErrors.filter(e => e.severity === "error").length > 0 && state.step !== "complete" && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Erreurs de validation</AlertTitle>
           <AlertDescription>
-            <ul className="mt-2 list-disc pl-4">
-              {state.validationErrors.slice(0, 5).map((error, i) => (
+            <p className="mb-2">Ces erreurs empêchent l&apos;import :</p>
+            <ul className="list-disc pl-4">
+              {state.validationErrors.filter(e => e.severity === "error").slice(0, 5).map((error, i) => (
                 <li key={i}>
                   {error.row > 0 && `Ligne ${error.row}: `}
                   {error.message}
                 </li>
               ))}
-              {state.validationErrors.length > 5 && (
-                <li>... et {state.validationErrors.length - 5} autres erreurs</li>
+              {state.validationErrors.filter(e => e.severity === "error").length > 5 && (
+                <li>... et {state.validationErrors.filter(e => e.severity === "error").length - 5} autres erreurs</li>
+              )}
+            </ul>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Validation Warnings (non-blocking) */}
+      {warningsCount > 0 && state.step !== "complete" && !hasCriticalErrors && (
+        <Alert className="border-yellow-500/50 bg-yellow-500/10">
+          <Info className="h-4 w-4 text-yellow-600" />
+          <AlertTitle className="text-yellow-700">Avertissements ({warningsCount})</AlertTitle>
+          <AlertDescription className="text-yellow-700">
+            <p className="mb-2">Certaines lignes ont des données manquantes ou invalides. L&apos;import peut continuer avec des valeurs par défaut :</p>
+            <ul className="list-disc pl-4">
+              {state.validationErrors.filter(e => e.severity === "warning").slice(0, 5).map((error, i) => (
+                <li key={i}>
+                  {error.row > 0 && `Ligne ${error.row}: `}
+                  {error.message}
+                </li>
+              ))}
+              {warningsCount > 5 && (
+                <li>... et {warningsCount - 5} autres avertissements</li>
               )}
             </ul>
           </AlertDescription>
@@ -582,7 +640,7 @@ export function DataImporter() {
               </Button>
               <Button
                 onClick={handleImport}
-                disabled={state.validationErrors.length > 0 || state.isImporting}
+                disabled={hasCriticalErrors || state.isImporting}
               >
                 {state.isImporting ? (
                   <>
