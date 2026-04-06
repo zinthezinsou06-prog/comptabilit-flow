@@ -7,7 +7,6 @@ export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Fetch summary data
   const [depensesResult, retraitsResult, categoriesResult] = await Promise.all([
     supabase
       .from("depenses")
@@ -29,12 +28,10 @@ export default async function DashboardPage() {
   const retraits = retraitsResult.data || []
   const categories = categoriesResult.data || []
 
-  // Calculate totals
   const totalDepenses = depenses.reduce((sum, d) => sum + Number(d.montant), 0)
   const totalRetraits = retraits.reduce((sum, r) => sum + Number(r.montant), 0)
   const solde = totalRetraits - totalDepenses
 
-  // Group expenses by category for chart
   const depensesByCategory = categories.map((cat) => ({
     name: cat.nom,
     value: depenses
@@ -42,7 +39,6 @@ export default async function DashboardPage() {
       .reduce((sum, d) => sum + Number(d.montant), 0),
   })).filter((item) => item.value > 0)
 
-  // Group by month for trend chart
   const last6Months = Array.from({ length: 6 }, (_, i) => {
     const date = new Date()
     date.setMonth(date.getMonth() - i)
@@ -56,35 +52,23 @@ export default async function DashboardPage() {
     const monthRetraits = retraits
       .filter((r) => r.date.startsWith(month))
       .reduce((sum, r) => sum + Number(r.montant), 0)
-    
     const [year, monthNum] = month.split("-")
     const monthName = new Date(Number(year), Number(monthNum) - 1).toLocaleDateString("fr-FR", { month: "short" })
-    
-    return {
-      name: monthName,
-      depenses: monthDepenses,
-      retraits: monthRetraits,
-    }
+    return { name: monthName, depenses: monthDepenses, retraits: monthRetraits }
   })
 
-  // Recent transactions (last 5)
-  const recentDepenses = depenses.slice(0, 5).map((d) => ({
-    ...d,
-    type: "depense" as const,
-  }))
-  const recentRetraits = retraits.slice(0, 5).map((r) => ({
-    ...r,
-    type: "retrait" as const,
-  }))
+  const recentDepenses = depenses.slice(0, 5).map((d) => ({ ...d, type: "depense" as const }))
+  const recentRetraits = retraits.slice(0, 5).map((r) => ({ ...r, type: "retrait" as const }))
   const recentTransactions = [...recentDepenses, ...recentRetraits]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5)
+    .slice(0, 8) // Show more on mobile for better overview
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
+      {/* Title — compact on mobile */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Tableau de bord</h1>
-        <p className="text-muted-foreground">Vue d&apos;ensemble de votre comptabilité</p>
+        <h1 className="text-xl font-bold text-foreground sm:text-2xl">Tableau de bord</h1>
+        <p className="text-sm text-muted-foreground">Vue d&apos;ensemble de votre comptabilité</p>
       </div>
 
       <DashboardStats
@@ -94,6 +78,7 @@ export default async function DashboardPage() {
         transactionCount={depenses.length + retraits.length}
       />
 
+      {/* Charts — stacked on mobile */}
       <DashboardCharts
         depensesByCategory={depensesByCategory}
         monthlyData={monthlyData}
