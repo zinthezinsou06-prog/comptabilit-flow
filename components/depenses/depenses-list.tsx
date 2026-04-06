@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Pencil, Trash2, Loader2 } from "lucide-react"
 import { DepenseEditForm } from "./depense-edit-form"
+import { TableExportButton } from "@/components/import-export/table-export-button"
 
 interface Depense {
   id: string
@@ -69,9 +70,40 @@ export function DepensesList({ depenses, categories }: DepensesListProps) {
 
   async function handleDelete(id: string) {
     setDeletingId(id)
-    await supabase.from("depenses").delete().eq("id", id)
-    router.refresh()
-    setDeletingId(null)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      const { error: deleteError } = await supabase.from("depenses").delete().eq("id", id)
+
+      if (deleteError) {
+        console.error("Error deleting depense:", deleteError)
+        alert("Erreur lors de la suppression: " + deleteError.message)
+        setDeletingId(null)
+        return
+      }
+
+      // Log action
+      if (user) {
+        const { error: logError } = await supabase.from("logs").insert({
+          user_id: user.id,
+          action: "DELETE",
+          table_concernee: "depenses",
+          enregistrement_id: id,
+          details: { deleted_at: new Date().toISOString() },
+        })
+
+        if (logError) {
+          console.error("Error logging action:", logError)
+        }
+      }
+
+      router.refresh()
+      setDeletingId(null)
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      alert("Une erreur inattendue s'est produite")
+      setDeletingId(null)
+    }
   }
 
   const totalDepenses = depenses.reduce((sum, d) => sum + Number(d.montant), 0)
@@ -81,8 +113,20 @@ export function DepensesList({ depenses, categories }: DepensesListProps) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Liste des dépenses</CardTitle>
-          <div className="text-lg font-semibold text-destructive">
-            Total: {formatCurrency(totalDepenses)}
+          <div className="flex items-center gap-4">
+            <TableExportButton
+              data={depenses.map(d => ({
+                Date: formatDate(d.date),
+                Catégorie: d.categories?.nom || "-",
+                Désignation: d.designation || "-",
+                Montant: formatCurrency(d.montant),
+              }))}
+              filename={`depenses_${new Date().toISOString().split("T")[0]}`}
+              sheetName="Dépenses"
+            />
+            <div className="text-lg font-semibold text-destructive">
+              Total: {formatCurrency(totalDepenses)}
+            </div>
           </div>
         </CardHeader>
         <CardContent>

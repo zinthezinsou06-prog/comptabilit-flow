@@ -55,30 +55,53 @@ export function DepenseEditForm({ depense, categories, open, onClose }: DepenseE
     e.preventDefault()
     setIsLoading(true)
 
-    const { data: { user } } = await supabase.auth.getUser()
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
 
-    await supabase
-      .from("depenses")
-      .update({
-        montant: parseFloat(montant),
-        date,
-        categorie_id: categorieId || null,
-        designation: designation || null,
+      if (!user) {
+        alert("Utilisateur non authentifié")
+        setIsLoading(false)
+        return
+      }
+
+      const { error: updateError } = await supabase
+        .from("depenses")
+        .update({
+          montant: parseFloat(montant),
+          date,
+          categorie_id: categorieId || null,
+          designation: designation || null,
+        })
+        .eq("id", depense.id)
+
+      if (updateError) {
+        console.error("Error updating depense:", updateError)
+        alert("Erreur lors de la modification: " + updateError.message)
+        setIsLoading(false)
+        return
+      }
+
+      // Log action
+      const { error: logError } = await supabase.from("logs").insert({
+        user_id: user.id,
+        action: "UPDATE",
+        table_concernee: "depenses",
+        enregistrement_id: depense.id,
+        details: { montant: parseFloat(montant), designation, categorie_id: categorieId },
       })
-      .eq("id", depense.id)
 
-    // Log action
-    await supabase.from("logs").insert({
-      user_id: user?.id,
-      action: "UPDATE",
-      table_concernee: "depenses",
-      enregistrement_id: depense.id,
-      details: { montant: parseFloat(montant), designation, categorie_id: categorieId },
-    })
+      if (logError) {
+        console.error("Error logging action:", logError)
+      }
 
-    setIsLoading(false)
-    onClose()
-    router.refresh()
+      setIsLoading(false)
+      onClose()
+      router.refresh()
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      alert("Une erreur inattendue s'est produite")
+      setIsLoading(false)
+    }
   }
 
   return (

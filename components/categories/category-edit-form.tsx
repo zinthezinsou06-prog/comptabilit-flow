@@ -18,7 +18,6 @@ import { Loader2 } from "lucide-react"
 interface Category {
   id: string
   nom: string
-  description: string | null
 }
 
 interface CategoryEditFormProps {
@@ -30,7 +29,7 @@ interface CategoryEditFormProps {
 export function CategoryEditForm({ category, open, onClose }: CategoryEditFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [nom, setNom] = useState(category.nom)
-  const [description, setDescription] = useState(category.description || "")
+  const [description, setDescription] = useState("")
   const router = useRouter()
   const supabase = createClient()
 
@@ -38,17 +37,37 @@ export function CategoryEditForm({ category, open, onClose }: CategoryEditFormPr
     e.preventDefault()
     setIsLoading(true)
 
-    await supabase
-      .from("categories")
-      .update({
-        nom,
-        description: description || null,
-      })
-      .eq("id", category.id)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
 
-    setIsLoading(false)
-    onClose()
-    router.refresh()
+      if (!user) {
+        alert("Utilisateur non authentifié")
+        setIsLoading(false)
+        return
+      }
+
+      const { error: updateError } = await supabase
+        .from("categories")
+        .update({
+          nom,
+        })
+        .eq("id", category.id)
+
+      if (updateError) {
+        console.error("Error updating category:", updateError)
+        alert("Erreur lors de la modification: " + updateError.message)
+        setIsLoading(false)
+        return
+      }
+
+      setIsLoading(false)
+      onClose()
+      router.refresh()
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      alert("Une erreur inattendue s'est produite")
+      setIsLoading(false)
+    }
   }
 
   return (

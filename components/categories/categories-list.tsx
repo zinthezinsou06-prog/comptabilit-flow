@@ -18,11 +18,11 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Pencil, Trash2, Loader2, FolderOpen } from "lucide-react"
 import { CategoryEditForm } from "./category-edit-form"
+import { TableExportButton } from "@/components/import-export/table-export-button"
 
 interface Category {
   id: string
   nom: string
-  description: string | null
 }
 
 interface CategoriesListProps {
@@ -37,16 +37,54 @@ export function CategoriesList({ categories }: CategoriesListProps) {
 
   async function handleDelete(id: string) {
     setDeletingId(id)
-    await supabase.from("categories").delete().eq("id", id)
-    router.refresh()
-    setDeletingId(null)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      const { error: deleteError } = await supabase.from("categories").delete().eq("id", id)
+
+      if (deleteError) {
+        console.error("Error deleting category:", deleteError)
+        alert("Erreur lors de la suppression: " + deleteError.message)
+        setDeletingId(null)
+        return
+      }
+
+      // Log action
+      if (user) {
+        const { error: logError } = await supabase.from("logs").insert({
+          user_id: user.id,
+          action: "DELETE",
+          table_concernee: "categories",
+          enregistrement_id: id,
+          details: { deleted_at: new Date().toISOString() },
+        })
+
+        if (logError) {
+          console.error("Error logging action:", logError)
+        }
+      }
+
+      router.refresh()
+      setDeletingId(null)
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      alert("Une erreur inattendue s'est produite")
+      setDeletingId(null)
+    }
   }
 
   return (
     <>
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Liste des catégories</CardTitle>
+          <TableExportButton
+            data={categories.map(c => ({
+              Nom: c.nom,
+            }))}
+            filename={`categories_${new Date().toISOString().split("T")[0]}`}
+            sheetName="Catégories"
+          />
         </CardHeader>
         <CardContent>
           {categories.length > 0 ? (
@@ -62,9 +100,6 @@ export function CategoriesList({ categories }: CategoriesListProps) {
                     </div>
                     <div>
                       <p className="font-medium text-foreground">{category.nom}</p>
-                      {category.description && (
-                        <p className="text-sm text-muted-foreground">{category.description}</p>
-                      )}
                     </div>
                   </div>
                   <div className="flex gap-1">

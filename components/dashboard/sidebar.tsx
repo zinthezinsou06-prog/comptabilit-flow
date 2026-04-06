@@ -11,6 +11,9 @@ import {
   Settings,
   FolderOpen,
   TrendingUp,
+  Sparkles,
+  Upload,
+  HelpCircle,
 } from "lucide-react"
 
 const navigation = [
@@ -19,8 +22,11 @@ const navigation = [
   { name: "Retraits", href: "/dashboard/retraits", icon: ArrowDownCircle },
   { name: "Catégories", href: "/dashboard/categories", icon: FolderOpen },
   { name: "Analyse", href: "/dashboard/analyse", icon: TrendingUp },
+  { name: "Outils Avancés", href: "/dashboard/outils", icon: Sparkles },
+  { name: "Import/Export", href: "/dashboard/import-export", icon: Upload },
   { name: "Rapports", href: "/dashboard/rapports", icon: FileBarChart },
   { name: "Paramètres", href: "/dashboard/parametres", icon: Settings },
+  { name: "Aide", href: "/dashboard/aide", icon: HelpCircle },
 ]
 
 export function DashboardSidebar() {

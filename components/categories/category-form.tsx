@@ -28,19 +28,37 @@ export function CategoryForm() {
     e.preventDefault()
     setIsLoading(true)
 
-    const { data: { user } } = await supabase.auth.getUser()
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
 
-    await supabase.from("categories").insert({
-      nom,
-      description: description || null,
-      user_id: user?.id,
-    })
+      if (!user) {
+        alert("Utilisateur non authentifié")
+        setIsLoading(false)
+        return
+      }
 
-    setNom("")
-    setDescription("")
-    setIsLoading(false)
-    setOpen(false)
-    router.refresh()
+      const { error } = await supabase.from("categories").insert({
+        nom,
+        user_id: user.id,
+      })
+
+      if (error) {
+        console.error("Error inserting category:", error)
+        alert("Erreur lors de l'ajout de la catégorie: " + error.message)
+        setIsLoading(false)
+        return
+      }
+
+      setNom("")
+      setDescription("")
+      setIsLoading(false)
+      setOpen(false)
+      router.refresh()
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      alert("Une erreur inattendue s'est produite")
+      setIsLoading(false)
+    }
   }
 
   return (
