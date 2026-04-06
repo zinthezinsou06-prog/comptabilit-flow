@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -106,9 +105,6 @@ export function DataImporter() {
     importedCount: 0,
     step: "select",
   })
-
-  const router = useRouter()
-  const supabase = createClient()
 
   const resetState = () => {
     setState({
@@ -288,6 +284,7 @@ export function DataImporter() {
     setState(prev => ({ ...prev, isImporting: true, step: "importing", importProgress: 0 }))
 
     try {
+      const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("Utilisateur non connecté")
 
@@ -365,8 +362,6 @@ export function DataImporter() {
         importedCount,
         step: "complete",
       }))
-
-      router.refresh()
     } catch (error) {
       console.error("Import error:", error)
       setState(prev => ({
