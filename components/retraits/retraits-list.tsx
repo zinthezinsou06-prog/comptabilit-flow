@@ -62,9 +62,40 @@ export function RetraitsList({ retraits }: RetraitsListProps) {
 
   async function handleDelete(id: string) {
     setDeletingId(id)
-    await supabase.from("retraits").delete().eq("id", id)
-    router.refresh()
-    setDeletingId(null)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      const { error: deleteError } = await supabase.from("retraits").delete().eq("id", id)
+
+      if (deleteError) {
+        console.error("Error deleting retrait:", deleteError)
+        alert("Erreur lors de la suppression: " + deleteError.message)
+        setDeletingId(null)
+        return
+      }
+
+      // Log action
+      if (user) {
+        const { error: logError } = await supabase.from("logs").insert({
+          user_id: user.id,
+          action: "DELETE",
+          table_concernee: "retraits",
+          enregistrement_id: id,
+          details: { deleted_at: new Date().toISOString() },
+        })
+
+        if (logError) {
+          console.error("Error logging action:", logError)
+        }
+      }
+
+      router.refresh()
+      setDeletingId(null)
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      alert("Une erreur inattendue s'est produite")
+      setDeletingId(null)
+    }
   }
 
   const totalRetraits = retraits.reduce((sum, r) => sum + Number(r.montant), 0)

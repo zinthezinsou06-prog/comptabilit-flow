@@ -42,30 +42,53 @@ export function RetraitEditForm({ retrait, open, onClose }: RetraitEditFormProps
     e.preventDefault()
     setIsLoading(true)
 
-    const { data: { user } } = await supabase.auth.getUser()
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
 
-    await supabase
-      .from("retraits")
-      .update({
-        montant: parseFloat(montant),
-        date,
-        designation: designation || null,
-        motif: motif || null,
+      if (!user) {
+        alert("Utilisateur non authentifié")
+        setIsLoading(false)
+        return
+      }
+
+      const { error: updateError } = await supabase
+        .from("retraits")
+        .update({
+          montant: parseFloat(montant),
+          date,
+          designation: designation || null,
+          motif: motif || null,
+        })
+        .eq("id", retrait.id)
+
+      if (updateError) {
+        console.error("Error updating retrait:", updateError)
+        alert("Erreur lors de la modification: " + updateError.message)
+        setIsLoading(false)
+        return
+      }
+
+      // Log action
+      const { error: logError } = await supabase.from("logs").insert({
+        user_id: user.id,
+        action: "UPDATE",
+        table_concernee: "retraits",
+        enregistrement_id: retrait.id,
+        details: { montant: parseFloat(montant), designation, motif },
       })
-      .eq("id", retrait.id)
 
-    // Log action
-    await supabase.from("logs").insert({
-      user_id: user?.id,
-      action: "UPDATE",
-      table_concernee: "retraits",
-      enregistrement_id: retrait.id,
-      details: { montant: parseFloat(montant), designation, motif },
-    })
+      if (logError) {
+        console.error("Error logging action:", logError)
+      }
 
-    setIsLoading(false)
-    onClose()
-    router.refresh()
+      setIsLoading(false)
+      onClose()
+      router.refresh()
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      alert("Une erreur inattendue s'est produite")
+      setIsLoading(false)
+    }
   }
 
   return (

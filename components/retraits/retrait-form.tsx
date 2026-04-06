@@ -30,32 +30,57 @@ export function RetraitForm() {
     e.preventDefault()
     setIsLoading(true)
 
-    const { data: { user } } = await supabase.auth.getUser()
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
 
-    const { data: newRetrait } = await supabase.from("retraits").insert({
-      montant: parseFloat(montant),
-      date,
-      designation: designation || null,
-      motif: motif || null,
-      user_id: user?.id,
-    }).select().single()
+      if (!user) {
+        alert("Utilisateur non authentifié")
+        setIsLoading(false)
+        return
+      }
 
-    // Log action
-    await supabase.from("logs").insert({
-      user_id: user?.id,
-      action: "CREATE",
-      table_concernee: "retraits",
-      enregistrement_id: newRetrait?.id,
-      details: { montant: parseFloat(montant), designation, motif },
-    })
+      const { data: newRetrait, error: insertError } = await supabase.from("retraits").insert({
+        montant: parseFloat(montant),
+        date,
+        designation: designation || null,
+        motif: motif || null,
+        user_id: user.id,
+      }).select().single()
 
-    setMontant("")
-    setDate(new Date().toISOString().split("T")[0])
-    setDesignation("")
-    setMotif("")
-    setIsLoading(false)
-    setOpen(false)
-    router.refresh()
+      if (insertError) {
+        console.error("Error inserting retrait:", insertError)
+        alert("Erreur lors de l'ajout du retrait: " + insertError.message)
+        setIsLoading(false)
+        return
+      }
+
+      // Log action
+      if (newRetrait?.id) {
+        const { error: logError } = await supabase.from("logs").insert({
+          user_id: user.id,
+          action: "INSERT",
+          table_concernee: "retraits",
+          enregistrement_id: newRetrait.id,
+          details: { montant: parseFloat(montant), designation, motif },
+        })
+
+        if (logError) {
+          console.error("Error logging action:", logError)
+        }
+      }
+
+      setMontant("")
+      setDate(new Date().toISOString().split("T")[0])
+      setDesignation("")
+      setMotif("")
+      setIsLoading(false)
+      setOpen(false)
+      router.refresh()
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      alert("Une erreur inattendue s'est produite")
+      setIsLoading(false)
+    }
   }
 
   return (

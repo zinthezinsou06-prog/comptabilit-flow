@@ -46,32 +46,57 @@ export function DepenseForm({ categories }: DepenseFormProps) {
     e.preventDefault()
     setIsLoading(true)
 
-    const { data: { user } } = await supabase.auth.getUser()
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
 
-    const { data: newDepense } = await supabase.from("depenses").insert({
-      montant: parseFloat(montant),
-      date,
-      categorie_id: categorieId || null,
-      designation: designation || null,
-      user_id: user?.id,
-    }).select().single()
+      if (!user) {
+        alert("Utilisateur non authentifié")
+        setIsLoading(false)
+        return
+      }
 
-    // Log action
-    await supabase.from("logs").insert({
-      user_id: user?.id,
-      action: "CREATE",
-      table_concernee: "depenses",
-      enregistrement_id: newDepense?.id,
-      details: { montant: parseFloat(montant), designation, categorie_id: categorieId },
-    })
+      const { data: newDepense, error: insertError } = await supabase.from("depenses").insert({
+        montant: parseFloat(montant),
+        date,
+        categorie_id: categorieId || null,
+        designation: designation || null,
+        user_id: user.id,
+      }).select().single()
 
-    setMontant("")
-    setDate(new Date().toISOString().split("T")[0])
-    setCategorieId("")
-    setDesignation("")
-    setIsLoading(false)
-    setOpen(false)
-    router.refresh()
+      if (insertError) {
+        console.error("Error inserting depense:", insertError)
+        alert("Erreur lors de l'ajout de la dépense: " + insertError.message)
+        setIsLoading(false)
+        return
+      }
+
+      // Log action
+      if (newDepense?.id) {
+        const { error: logError } = await supabase.from("logs").insert({
+          user_id: user.id,
+          action: "INSERT",
+          table_concernee: "depenses",
+          enregistrement_id: newDepense.id,
+          details: { montant: parseFloat(montant), designation, categorie_id: categorieId },
+        })
+
+        if (logError) {
+          console.error("Error logging action:", logError)
+        }
+      }
+
+      setMontant("")
+      setDate(new Date().toISOString().split("T")[0])
+      setCategorieId("")
+      setDesignation("")
+      setIsLoading(false)
+      setOpen(false)
+      router.refresh()
+    } catch (error) {
+      console.error("Unexpected error:", error)
+      alert("Une erreur inattendue s'est produite")
+      setIsLoading(false)
+    }
   }
 
   return (
