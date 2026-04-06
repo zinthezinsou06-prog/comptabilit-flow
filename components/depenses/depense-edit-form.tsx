@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -109,6 +110,9 @@ export function DepenseEditForm({ depense, categories, open, onClose }: DepenseE
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Modifier la dépense</DialogTitle>
+          <DialogDescription>
+            Modifiez les informations de cette dépense.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
