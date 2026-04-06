@@ -8,13 +8,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
 import {
   Select,
   SelectContent,
@@ -56,34 +55,32 @@ export function DepenseForm({ categories }: DepenseFormProps) {
         return
       }
 
-      const { data: newDepense, error: insertError } = await supabase.from("depenses").insert({
-        montant: parseFloat(montant),
-        date,
-        categorie_id: categorieId || null,
-        designation: designation || null,
-        user_id: user.id,
-      }).select().single()
+      const { data: newDepense, error: insertError } = await supabase
+        .from("depenses")
+        .insert({
+          montant: parseFloat(montant),
+          date,
+          categorie_id: categorieId || null,
+          designation: designation || null,
+          user_id: user.id,
+        })
+        .select()
+        .single()
 
       if (insertError) {
-        console.error("Error inserting depense:", insertError)
         alert("Erreur lors de l'ajout de la dépense: " + insertError.message)
         setIsLoading(false)
         return
       }
 
-      // Log action
       if (newDepense?.id) {
-        const { error: logError } = await supabase.from("logs").insert({
+        await supabase.from("logs").insert({
           user_id: user.id,
           action: "INSERT",
           table_concernee: "depenses",
           enregistrement_id: newDepense.id,
           details: { montant: parseFloat(montant), designation, categorie_id: categorieId },
         })
-
-        if (logError) {
-          console.error("Error logging action:", logError)
-        }
       }
 
       setMontant("")
@@ -94,93 +91,115 @@ export function DepenseForm({ categories }: DepenseFormProps) {
       setOpen(false)
       router.refresh()
     } catch (error) {
-      console.error("Unexpected error:", error)
       alert("Une erreur inattendue s'est produite")
       setIsLoading(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Nouvelle dépense
+    // Use Sheet (bottom sheet) instead of Dialog for better Android UX
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button className="gap-2 rounded-xl">
+          <Plus className="h-4 w-4" />
+          <span>Nouvelle dépense</span>
         </Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Ajouter une dépense</DialogTitle>
-          <DialogDescription>
-            Enregistrez une nouvelle dépense dans votre comptabilité.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="montant">Montant (€)</Label>
+      </SheetTrigger>
+      <SheetContent
+        side="bottom"
+        className="rounded-t-2xl px-4 pb-safe"
+        style={{ maxHeight: "90dvh", overflowY: "auto" }}
+      >
+        <SheetHeader className="mb-4">
+          <SheetTitle className="text-left">Ajouter une dépense</SheetTitle>
+        </SheetHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pb-4">
+          {/* Montant — large input */}
+          <div className="space-y-1.5">
+            <Label htmlFor="montant" className="text-sm font-medium">
+              Montant (€)
+            </Label>
             <Input
               id="montant"
               type="number"
+              inputMode="decimal"
               step="0.01"
               min="0"
               placeholder="0.00"
               value={montant}
               onChange={(e) => setMontant(e.target.value)}
+              className="h-12 text-base"
               required
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="date" className="text-sm font-medium">
+              Date
+            </Label>
             <Input
               id="date"
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
+              className="h-12 text-base"
               required
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="categorie">Catégorie</Label>
+
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium">Catégorie</Label>
             <Select value={categorieId} onValueChange={setCategorieId}>
-              <SelectTrigger>
+              <SelectTrigger className="h-12 text-base">
                 <SelectValue placeholder="Sélectionner une catégorie" />
               </SelectTrigger>
               <SelectContent>
                 {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id}>
+                  <SelectItem key={cat.id} value={cat.id} className="py-3">
                     {cat.nom}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="designation">Désignation</Label>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="designation" className="text-sm font-medium">
+              Désignation
+            </Label>
             <Textarea
               id="designation"
-              placeholder="Désignation de la dépense..."
+              placeholder="Description de la dépense..."
               value={designation}
               onChange={(e) => setDesignation(e.target.value)}
-              rows={3}
+              rows={2}
+              className="text-base resize-none"
             />
           </div>
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+
+          <div className="flex gap-3 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-12 flex-1 rounded-xl"
+              onClick={() => setOpen(false)}
+            >
               Annuler
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="h-12 flex-1 rounded-xl"
+            >
               {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Ajout...
-                </>
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 "Ajouter"
               )}
             </Button>
           </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   )
 }
