@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -76,9 +75,6 @@ export function CategoryEditForm({ category, open, onClose }: CategoryEditFormPr
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Modifier la catégorie</DialogTitle>
-          <DialogDescription>
-            Modifiez les informations de cette catégorie ci-dessous.
-          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

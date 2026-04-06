@@ -1,4 +1,3 @@
-import { Suspense } from "react"
 import { createClient } from "@/lib/supabase/server"
 import { ReportsFilters } from "@/components/reports/reports-filters"
 import { ReportsSummary } from "@/components/reports/reports-summary"
@@ -93,15 +92,13 @@ export default async function RapportsPage({ searchParams }: PageProps) {
         />
       </div>
 
-      <Suspense fallback={<div className="h-[200px] animate-pulse bg-muted rounded-lg" />}>
-        <ReportsFilters
-          startDate={startDate}
-          endDate={endDate}
-          type={type}
-          category={category}
-          categories={categories}
-        />
-      </Suspense>
+      <ReportsFilters
+        startDate={startDate}
+        endDate={endDate}
+        type={type}
+        category={category}
+        categories={categories}
+      />
 
       <ReportsSummary
         totalDepenses={totalDepenses}

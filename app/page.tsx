@@ -1,5 +1,13 @@
-// Root page - redirects are handled by middleware
-// This page should not normally be reached as middleware redirects to /dashboard or /auth/login
-export default function HomePage() {
-  return null
+import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/server"
+
+export default async function HomePage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (user) {
+    redirect("/dashboard")
+  } else {
+    redirect("/auth/login")
+  }
 }

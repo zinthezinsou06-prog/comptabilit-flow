@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -97,9 +96,6 @@ export function RetraitEditForm({ retrait, open, onClose }: RetraitEditFormProps
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Modifier le retrait</DialogTitle>
-          <DialogDescription>
-            Modifiez les informations de ce retrait ci-dessous.
-          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
