@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import {
   LayoutDashboard,
   Receipt,
@@ -16,6 +15,7 @@ import {
   Upload,
   HelpCircle,
 } from "lucide-react"
+import { SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
 const navigation = [
   { name: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard },
@@ -35,7 +35,7 @@ export function MobileSidebar() {
 
   return (
     <div className="flex h-full flex-col bg-card">
-      <SheetHeader className="border-b border-border p-4">
+      <SheetHeader className="border-b border-border px-4 py-4">
         <SheetTitle className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <span className="text-sm font-bold text-primary-foreground">CF</span>
@@ -43,23 +43,24 @@ export function MobileSidebar() {
           <span>ComptaFlow</span>
         </SheetTitle>
       </SheetHeader>
-      <nav className="flex flex-col gap-1 p-4">
+      <nav className="flex flex-col gap-1 overflow-y-auto p-3 pb-safe">
         {navigation.map((item) => {
-          const isActive = pathname === item.href || 
+          const isActive =
+            pathname === item.href ||
             (item.href !== "/dashboard" && pathname.startsWith(item.href))
           return (
             <Link
               key={item.name}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition-all active:scale-95",
                 isActive
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground"
               )}
             >
-              <item.icon className="h-5 w-5" />
-              {item.name}
+              <item.icon className="h-5 w-5 shrink-0" />
+              <span>{item.name}</span>
             </Link>
           )
         })}

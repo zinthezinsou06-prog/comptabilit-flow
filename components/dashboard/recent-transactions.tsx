@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowDownCircle, ArrowUpCircle } from "lucide-react"
+import Link from "next/link"
 
 interface Transaction {
   montant: number
@@ -23,64 +24,77 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("fr-FR", {
+    const date = new Date(dateString)
+    const today = new Date()
+    const yesterday = new Date(today)
+    yesterday.setDate(yesterday.getDate() - 1)
+
+    if (date.toDateString() === today.toDateString()) return "Aujourd'hui"
+    if (date.toDateString() === yesterday.toDateString()) return "Hier"
+
+    return date.toLocaleDateString("fr-FR", {
       day: "numeric",
       month: "short",
-      year: "numeric",
     })
   }
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Transactions récentes</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between px-4 py-4">
+        <CardTitle className="text-base">Transactions récentes</CardTitle>
+        <Link
+          href="/dashboard/rapports"
+          className="text-xs font-medium text-primary hover:underline"
+        >
+          Voir tout
+        </Link>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-0 pb-0">
         {transactions.length > 0 ? (
-          <div className="space-y-4">
+          <div className="divide-y divide-border">
             {transactions.map((transaction, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between rounded-lg border border-border p-4"
+                className="flex items-center gap-3 px-4 py-3"
               >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                      transaction.type === "depense"
-                        ? "bg-destructive/10"
-                        : "bg-accent/10"
-                    }`}
-                  >
-                    {transaction.type === "depense" ? (
-                      <ArrowUpCircle className="h-5 w-5 text-destructive" />
-                    ) : (
-                      <ArrowDownCircle className="h-5 w-5 text-accent" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-medium text-foreground">
-                      {transaction.type === "depense"
-                        ? transaction.categories?.nom || "Dépense"
-                        : transaction.designation || "Retrait"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(transaction.date)}
-                    </p>
-                  </div>
-                </div>
                 <div
-                  className={`text-lg font-semibold ${
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                    transaction.type === "depense"
+                      ? "bg-destructive/10"
+                      : "bg-accent/10"
+                  }`}
+                >
+                  {transaction.type === "depense" ? (
+                    <ArrowUpCircle className="h-4 w-4 text-destructive" />
+                  ) : (
+                    <ArrowDownCircle className="h-4 w-4 text-accent" />
+                  )}
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground">
+                    {transaction.type === "depense"
+                      ? transaction.categories?.nom || transaction.designation || "Dépense"
+                      : transaction.designation || "Retrait"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {formatDate(transaction.date)}
+                  </p>
+                </div>
+
+                <span
+                  className={`shrink-0 text-sm font-semibold ${
                     transaction.type === "depense" ? "text-destructive" : "text-accent"
                   }`}
                 >
                   {transaction.type === "depense" ? "-" : "+"}
                   {formatCurrency(transaction.montant)}
-                </div>
+                </span>
               </div>
             ))}
           </div>
         ) : (
-          <div className="py-8 text-center text-muted-foreground">
+          <div className="px-4 py-10 text-center text-sm text-muted-foreground">
             Aucune transaction récente
           </div>
         )}
