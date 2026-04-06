@@ -122,8 +122,56 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    /* Prevent text size adjust on orientation change (iOS/Android) */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
+
   body {
     @apply bg-background text-foreground;
+    /* Prevent overscroll bounce on Android Chrome */
+    overscroll-behavior: none;
+  }
+
+  /* Improve tap highlight on Android */
+  a, button, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Safe area utilities for Android gesture navigation */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Better scrolling on Android */
+  .overflow-y-auto,
+  .overflow-auto,
+  main {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ensure inputs don't zoom on Android (font-size >= 16px) */
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="date"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* Prevent layout shift when scrollbar appears/disappears */
+  html {
+    scrollbar-gutter: stable;
   }
 }
