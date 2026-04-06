@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -94,6 +95,9 @@ export function RetraitForm() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Ajouter un retrait</DialogTitle>
+          <DialogDescription>
+            Enregistrez un nouveau retrait ou entrée d&apos;argent.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
