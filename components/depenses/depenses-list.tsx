@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Pencil, Trash2, Loader2 } from "lucide-react"
 import { DepenseEditForm } from "./depense-edit-form"
+import { TableExportButton } from "@/components/import-export/table-export-button"
 
 interface Depense {
   id: string
@@ -112,8 +113,20 @@ export function DepensesList({ depenses, categories }: DepensesListProps) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Liste des dépenses</CardTitle>
-          <div className="text-lg font-semibold text-destructive">
-            Total: {formatCurrency(totalDepenses)}
+          <div className="flex items-center gap-4">
+            <TableExportButton
+              data={depenses.map(d => ({
+                Date: formatDate(d.date),
+                Catégorie: d.categories?.nom || "-",
+                Désignation: d.designation || "-",
+                Montant: formatCurrency(d.montant),
+              }))}
+              filename={`depenses_${new Date().toISOString().split("T")[0]}`}
+              sheetName="Dépenses"
+            />
+            <div className="text-lg font-semibold text-destructive">
+              Total: {formatCurrency(totalDepenses)}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
