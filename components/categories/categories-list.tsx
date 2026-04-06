@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Pencil, Trash2, Loader2, FolderOpen } from "lucide-react"
 import { CategoryEditForm } from "./category-edit-form"
+import { TableExportButton } from "@/components/import-export/table-export-button"
 
 interface Category {
   id: string
@@ -75,8 +76,15 @@ export function CategoriesList({ categories }: CategoriesListProps) {
   return (
     <>
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Liste des catégories</CardTitle>
+          <TableExportButton
+            data={categories.map(c => ({
+              Nom: c.nom,
+            }))}
+            filename={`categories_${new Date().toISOString().split("T")[0]}`}
+            sheetName="Catégories"
+          />
         </CardHeader>
         <CardContent>
           {categories.length > 0 ? (

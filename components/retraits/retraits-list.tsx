@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Pencil, Trash2, Loader2 } from "lucide-react"
 import { RetraitEditForm } from "./retrait-edit-form"
+import { TableExportButton } from "@/components/import-export/table-export-button"
 
 interface Retrait {
   id: string
@@ -105,8 +106,20 @@ export function RetraitsList({ retraits }: RetraitsListProps) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Liste des retraits</CardTitle>
-          <div className="text-lg font-semibold text-accent">
-            Total: {formatCurrency(totalRetraits)}
+          <div className="flex items-center gap-4">
+            <TableExportButton
+              data={retraits.map(r => ({
+                Date: formatDate(r.date),
+                Désignation: r.designation || "-",
+                Motif: r.motif || "-",
+                Montant: formatCurrency(r.montant),
+              }))}
+              filename={`retraits_${new Date().toISOString().split("T")[0]}`}
+              sheetName="Retraits"
+            />
+            <div className="text-lg font-semibold text-accent">
+              Total: {formatCurrency(totalRetraits)}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
