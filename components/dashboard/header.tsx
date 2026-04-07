@@ -33,7 +33,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
   }
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border bg-card px-6">
+    <header className="flex h-16 items-center justify-between border-b border-border bg-card px-4 md:px-6">
       <div className="flex items-center gap-4">
         <Sheet>
           <SheetTrigger asChild>

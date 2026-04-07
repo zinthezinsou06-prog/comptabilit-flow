@@ -104,7 +104,7 @@ export function RetraitsList({ retraits }: RetraitsListProps) {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
           <CardTitle>Liste des retraits</CardTitle>
           <div className="flex items-center gap-4">
             <TableExportButton

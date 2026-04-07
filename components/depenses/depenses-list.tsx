@@ -111,7 +111,7 @@ export function DepensesList({ depenses, categories }: DepensesListProps) {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
           <CardTitle>Liste des dépenses</CardTitle>
           <div className="flex items-center gap-4">
             <TableExportButton

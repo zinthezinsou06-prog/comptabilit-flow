@@ -79,7 +79,7 @@ export function CategoriesList({ categories }: CategoriesListProps) {
   return (
     <>
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between">
           <CardTitle>{t("categories.title") || "Liste des catégories"}</CardTitle>
           <TableExportButton
             data={categories.map(c => ({
@@ -95,17 +95,17 @@ export function CategoriesList({ categories }: CategoriesListProps) {
               {categories.map((category) => (
                 <div
                   key={category.id}
-                  className="flex items-center justify-between rounded-lg border border-border p-4"
+                  className="flex items-center justify-between gap-4 rounded-lg border border-border p-4 min-w-0"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                       <FolderOpen className="h-5 w-5 text-primary" />
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground">{category.nom}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{category.nom}</p>
                     </div>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="flex gap-1 shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"

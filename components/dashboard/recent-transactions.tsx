@@ -41,9 +41,9 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
             {transactions.map((transaction, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between rounded-lg border border-border p-4"
+                className="flex items-center justify-between gap-4 rounded-lg border border-border p-4"
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 flex-1 min-w-0">
                   <div
                     className={`flex h-10 w-10 items-center justify-center rounded-full ${
                       transaction.type === "depense"
@@ -57,8 +57,8 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                       <ArrowDownCircle className="h-5 w-5 text-accent" />
                     )}
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-foreground truncate">
                       {transaction.type === "depense"
                         ? transaction.categories?.nom || "Dépense"
                         : transaction.designation || "Retrait"}
@@ -69,7 +69,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
                   </div>
                 </div>
                 <div
-                  className={`text-lg font-semibold ${
+                  className={`text-lg font-semibold shrink-0 ${
                     transaction.type === "depense" ? "text-destructive" : "text-accent"
                   }`}
                 >

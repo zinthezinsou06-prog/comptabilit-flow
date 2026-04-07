@@ -38,7 +38,7 @@ export default async function DashboardLayout({
       <DashboardSidebar />
       <div className="flex flex-1 flex-col">
         <DashboardHeader user={user} />
-        <main className="flex-1 overflow-auto bg-background p-6">
+        <main className="flex-1 overflow-auto bg-background p-4 md:p-6">
           <SettingsProvider initialSettings={settings}>
             {children}
           </SettingsProvider>
