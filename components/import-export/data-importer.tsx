@@ -403,8 +403,8 @@ export function DataImporter() {
               value={state.dataType}
               onValueChange={(value: DataType) => {
                 setState(prev => ({ ...prev, dataType: value }))
-                if (prev.parsedData.length > 0) {
-                  validateData(prev.parsedData, value)
+                if (state.parsedData.length > 0) {
+                  validateData(state.parsedData, value)
                 }
               }}
               disabled={state.step !== "select"}

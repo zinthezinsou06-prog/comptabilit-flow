@@ -423,7 +423,8 @@ export default function TestPage() {
         
         const parCategorie: Record<string, number> = {}
         data.forEach(d => {
-          const cat = d.categories?.nom || 'Sans catégorie'
+          const catRaw = Array.isArray(d.categories) ? d.categories[0]?.nom : (d.categories as any)?.nom
+          const cat = catRaw || 'Sans catégorie'
           parCategorie[cat] = (parCategorie[cat] || 0) + Number(d.montant)
         })
         

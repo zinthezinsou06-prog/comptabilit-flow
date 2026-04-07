@@ -95,8 +95,8 @@ export function BudgetSimulator({ financialData }: BudgetSimulatorProps) {
     const adjustedIncome = baseMonthlyIncome * (1 + incomeIncrease / 100)
     
     // Calculate category-specific reductions
-    const categoryReductions = Object.entries(categoryAdjustments).reduce((sum, [, reduction]) => {
-      return sum + (financialData.depensesByCategory.find(c => c.id === _)?.value || 0) * (reduction / 100)
+    const categoryReductions = Object.entries(categoryAdjustments).reduce((sum, [categoryId, reduction]) => {
+      return sum + (financialData.depensesByCategory.find(c => c.id === categoryId)?.value || 0) * (reduction / 100)
     }, 0)
     
     const finalMonthlyExpenses = adjustedExpenses - (categoryReductions / 12)
