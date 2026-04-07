@@ -11,6 +11,16 @@ if (!supabaseUrl || !serviceRoleKey) {
 const supabase = createClient(supabaseUrl, serviceRoleKey)
 
 const SQL_SCRIPT = `
+-- Table des paramètres utilisateurs
+CREATE TABLE IF NOT EXISTS public.user_settings (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  currency TEXT DEFAULT '€' NOT NULL,
+  export_header TEXT DEFAULT 'Mon Entreprise - Export Financier',
+  export_footer TEXT DEFAULT 'Généré par Comptabilité Flow',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Table categories (prédéfinies ou éditables)
 CREATE TABLE IF NOT EXISTS categories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -58,10 +68,20 @@ CREATE TABLE IF NOT EXISTS logs (
 );
 
 -- Enable Row Level Security
+ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE depenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE retraits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE logs ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for user_settings
+DROP POLICY IF EXISTS "Users can view their own settings" ON user_settings;
+DROP POLICY IF EXISTS "Users can insert their own settings" ON user_settings;
+DROP POLICY IF EXISTS "Users can update their own settings" ON user_settings;
+
+CREATE POLICY "Users can view their own settings" ON user_settings FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert their own settings" ON user_settings FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update their own settings" ON user_settings FOR UPDATE USING (auth.uid() = user_id);
 
 -- RLS Policies for categories
 DROP POLICY IF EXISTS "categories_select_own" ON categories;
@@ -108,6 +128,7 @@ CREATE INDEX IF NOT EXISTS idx_depenses_user_date ON depenses(user_id, date);
 CREATE INDEX IF NOT EXISTS idx_retraits_user_date ON retraits(user_id, date);
 CREATE INDEX IF NOT EXISTS idx_categories_user ON categories(user_id);
 CREATE INDEX IF NOT EXISTS idx_logs_user ON logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_settings_user ON user_settings(user_id);
 `
 
 export async function POST(request: Request) {

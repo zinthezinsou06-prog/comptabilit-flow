@@ -30,10 +30,10 @@ export function DashboardSidebar() {
     { name: t("sidebar.categories"), href: "/dashboard/categories", icon: FolderOpen },
     { name: t("sidebar.analysis"), href: "/dashboard/analyse", icon: TrendingUp },
     { name: t("sidebar.tools"), href: "/dashboard/outils", icon: Sparkles },
-    { name: "Import/Export", href: "/dashboard/import-export", icon: Upload },
-    { name: "Rapports", href: "/dashboard/rapports", icon: FileBarChart },
+    { name: t("sidebar.import_export"), href: "/dashboard/import-export", icon: Upload },
+    { name: t("sidebar.reports"), href: "/dashboard/rapports", icon: FileBarChart },
     { name: t("sidebar.settings"), href: "/dashboard/parametres", icon: Settings },
-    { name: "Aide", href: "/dashboard/aide", icon: HelpCircle },
+    { name: t("sidebar.help"), href: "/dashboard/aide", icon: HelpCircle },
   ]
 
   return (

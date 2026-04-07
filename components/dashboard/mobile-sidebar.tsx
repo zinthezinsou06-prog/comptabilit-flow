@@ -29,10 +29,10 @@ export function MobileSidebar() {
     { name: t("sidebar.categories") || "Catégories", href: "/dashboard/categories", icon: FolderOpen },
     { name: t("sidebar.analysis") || "Analyse", href: "/dashboard/analyse", icon: TrendingUp },
     { name: t("sidebar.tools") || "Outils Avancés", href: "/dashboard/outils", icon: Sparkles },
-    { name: "Import/Export", href: "/dashboard/import-export", icon: Upload },
-    { name: "Rapports", href: "/dashboard/rapports", icon: FileBarChart },
+    { name: t("sidebar.import_export") || "Import/Export", href: "/dashboard/import-export", icon: Upload },
+    { name: t("sidebar.reports") || "Rapports", href: "/dashboard/rapports", icon: FileBarChart },
     { name: t("sidebar.settings") || "Paramètres", href: "/dashboard/parametres", icon: Settings },
-    { name: "Aide", href: "/dashboard/aide", icon: HelpCircle },
+    { name: t("sidebar.help") || "Aide", href: "/dashboard/aide", icon: HelpCircle },
   ]
 
   return (

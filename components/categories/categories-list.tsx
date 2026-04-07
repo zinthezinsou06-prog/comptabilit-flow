@@ -20,6 +20,8 @@ import { Pencil, Trash2, Loader2, FolderOpen } from "lucide-react"
 import { CategoryEditForm } from "./category-edit-form"
 import { TableExportButton } from "@/components/import-export/table-export-button"
 
+import { useSettings } from "@/components/providers/settings-provider"
+
 interface Category {
   id: string
   nom: string
@@ -30,6 +32,7 @@ interface CategoriesListProps {
 }
 
 export function CategoriesList({ categories }: CategoriesListProps) {
+  const { t } = useSettings()
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const router = useRouter()
@@ -44,7 +47,7 @@ export function CategoriesList({ categories }: CategoriesListProps) {
 
       if (deleteError) {
         console.error("Error deleting category:", deleteError)
-        alert("Erreur lors de la suppression: " + deleteError.message)
+        alert((t("common.error") || "Erreur") + ": " + deleteError.message)
         setDeletingId(null)
         return
       }
@@ -68,7 +71,7 @@ export function CategoriesList({ categories }: CategoriesListProps) {
       setDeletingId(null)
     } catch (error) {
       console.error("Unexpected error:", error)
-      alert("Une erreur inattendue s'est produite")
+      alert(t("common.unexpected_error") || "Une erreur inattendue s'est produite")
       setDeletingId(null)
     }
   }
@@ -77,13 +80,13 @@ export function CategoriesList({ categories }: CategoriesListProps) {
     <>
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Liste des catégories</CardTitle>
+          <CardTitle>{t("categories.title") || "Liste des catégories"}</CardTitle>
           <TableExportButton
             data={categories.map(c => ({
               Nom: c.nom,
             }))}
             filename={`categories_${new Date().toISOString().split("T")[0]}`}
-            sheetName="Catégories"
+            sheetName={t("categories.sheet_name") || "Catégories"}
           />
         </CardHeader>
         <CardContent>
@@ -109,24 +112,24 @@ export function CategoriesList({ categories }: CategoriesListProps) {
                       onClick={() => setEditingCategory(category)}
                     >
                       <Pencil className="h-4 w-4" />
-                      <span className="sr-only">Modifier</span>
+                      <span className="sr-only">{t("common.edit") || "Modifier"}</span>
                     </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button variant="ghost" size="icon">
                           <Trash2 className="h-4 w-4 text-destructive" />
-                          <span className="sr-only">Supprimer</span>
+                          <span className="sr-only">{t("common.delete") || "Supprimer"}</span>
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Supprimer la catégorie ?</AlertDialogTitle>
+                          <AlertDialogTitle>{t("categories.delete_title") || "Supprimer la catégorie ?"}</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Cette action est irréversible. Les dépenses liées à cette catégorie ne seront plus catégorisées.
+                            {t("categories.delete_description") || "Cette action est irréversible. Les dépenses liées à cette catégorie ne seront plus catégorisées."}
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Annuler</AlertDialogCancel>
+                          <AlertDialogCancel>{t("common.cancel") || "Annuler"}</AlertDialogCancel>
                           <AlertDialogAction
                             onClick={() => handleDelete(category.id)}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -134,7 +137,7 @@ export function CategoriesList({ categories }: CategoriesListProps) {
                             {deletingId === category.id ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                              "Supprimer"
+                              t("common.delete") || "Supprimer"
                             )}
                           </AlertDialogAction>
                         </AlertDialogFooter>
@@ -146,7 +149,7 @@ export function CategoriesList({ categories }: CategoriesListProps) {
             </div>
           ) : (
             <div className="py-8 text-center text-muted-foreground">
-              Aucune catégorie créée
+              {t("categories.no_data") || "Aucune catégorie créée"}
             </div>
           )}
         </CardContent>

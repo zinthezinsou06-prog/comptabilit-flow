@@ -1,13 +1,4 @@
-"use client"
-
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Download, FileSpreadsheet, FileText } from "lucide-react"
+import { useSettings } from "@/components/providers/settings-provider"
 
 interface Transaction {
   id: string
@@ -36,15 +27,36 @@ export function ReportsExport({
   totalRetraits,
   solde,
 }: ReportsExportProps) {
+  const { settings, t } = useSettings()
+
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
+    const isStandard = settings.currency === "€" || settings.currency === "$" || settings.currency?.length === 3
+    
+    if (isStandard) {
+      const currencyCode = settings.currency === "€" ? "EUR" : settings.currency === "$" ? "USD" : settings.currency
+      try {
+        return new Intl.NumberFormat(settings.language === "en" ? "en-US" : "fr-FR", {
+          style: "currency",
+          currency: currencyCode,
+        }).format(amount)
+      } catch {
+        // Fallback below
+      }
+    }
+    
+    // Custom fallback for symbols like FCFA
+    const formattedAmount = new Intl.NumberFormat(settings.language === "en" ? "en-US" : "fr-FR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount)
+    
+    return settings.language === "en" 
+      ? `${settings.currency} ${formattedAmount}` 
+      : `${formattedAmount} ${settings.currency}`
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("fr-FR")
+    return new Date(dateString).toLocaleDateString(settings.language === "en" ? "en-US" : "fr-FR")
   }
 
   function exportToCSV() {
@@ -72,7 +84,6 @@ export function ReportsExport({
   }
 
   function exportToPDF() {
-    // Create a printable HTML version
     const printWindow = window.open("", "_blank")
     if (!printWindow) return
 
@@ -80,36 +91,154 @@ export function ReportsExport({
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Rapport ComptaFlow</title>
+          <title>Rapport ComptaFlow - ${settings.export_header}</title>
           <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h1 { color: #333; }
-            .summary { margin: 20px 0; padding: 15px; background: #f5f5f5; border-radius: 8px; }
-            .summary-item { display: flex; justify-content: space-between; margin: 5px 0; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-            th { background: #f5f5f5; }
-            .depense { color: #dc2626; }
-            .retrait { color: #16a34a; }
-            @media print { body { padding: 0; } }
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+            
+            body { 
+              font-family: 'Inter', -apple-system, sans-serif; 
+              color: #1a1a1a;
+              line-height: 1.5;
+              margin: 0;
+              padding: 40px;
+            }
+            
+            .header {
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              border-bottom: 2px solid #e5e7eb;
+              padding-bottom: 20px;
+              margin-bottom: 30px;
+            }
+            
+            .brand-section h1 {
+              margin: 0;
+              font-size: 24px;
+              font-weight: 800;
+              color: #2563eb;
+              letter-spacing: -0.025em;
+            }
+            
+            .brand-section p {
+              margin: 4px 0 0;
+              color: #6b7280;
+              font-size: 14px;
+            }
+            
+            .company-section {
+              text-align: right;
+            }
+            
+            .company-name {
+              font-weight: 700;
+              font-size: 18px;
+              margin: 0;
+            }
+            
+            .report-info {
+              color: #6b7280;
+              font-size: 14px;
+              margin: 4px 0 0;
+            }
+            
+            .summary-cards {
+              display: grid;
+              grid-template-columns: repeat(3, 1fr);
+              gap: 20px;
+              margin-bottom: 40px;
+            }
+            
+            .card {
+              padding: 16px;
+              border: 1px solid #e5e7eb;
+              border-radius: 12px;
+              background: #f9fafb;
+            }
+            
+            .card-label {
+              font-size: 12px;
+              font-weight: 600;
+              color: #6b7280;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+              margin-bottom: 8px;
+              display: block;
+            }
+            
+            .card-value {
+              font-size: 20px;
+              font-weight: 700;
+            }
+            
+            .value-negative { color: #dc2626; }
+            .value-positive { color: #16a34a; }
+            
+            table { 
+              width: 100%; 
+              border-collapse: separate; 
+              border-spacing: 0;
+              margin-top: 20px; 
+            }
+            
+            th { 
+              background: #f3f4f6;
+              padding: 12px; 
+              text-align: left; 
+              font-size: 12px;
+              font-weight: 600;
+              color: #4b5563;
+              text-transform: uppercase;
+              border-bottom: 1px solid #e5e7eb;
+            }
+            
+            td { 
+              padding: 12px; 
+              font-size: 14px;
+              border-bottom: 1px solid #e5e7eb; 
+            }
+            
+            tr:nth-child(even) { background: #fcfcfc; }
+            
+            .footer {
+              margin-top: 50px;
+              text-align: center;
+              font-size: 12px;
+              color: #9ca3af;
+              border-top: 1px solid #f3f4f6;
+              padding-top: 20px;
+            }
+            
+            @media print {
+              body { padding: 0; }
+              .card { background: #fff !important; }
+            }
           </style>
         </head>
         <body>
-          <h1>Rapport Financier</h1>
-          <p>Période: ${formatDate(startDate)} - ${formatDate(endDate)}</p>
+          <div class="header">
+            <div class="brand-section">
+              <h1>ComptaFlow</h1>
+              <p>Logiciel de Gestion Comptable</p>
+            </div>
+            <div class="company-section">
+              <p class="company-name">${settings.export_header}</p>
+              <p class="report-info">Rapport Financier: ${formatDate(startDate)} - ${formatDate(endDate)}</p>
+            </div>
+          </div>
           
-          <div class="summary">
-            <div class="summary-item">
-              <span>Total Dépenses:</span>
-              <span class="depense">${formatCurrency(totalDepenses)}</span>
+          <div class="summary-cards">
+            <div class="card">
+              <span class="card-label">Total Dépenses</span>
+              <span class="card-value value-negative">-${formatCurrency(totalDepenses)}</span>
             </div>
-            <div class="summary-item">
-              <span>Total Retraits:</span>
-              <span class="retrait">${formatCurrency(totalRetraits)}</span>
+            <div class="card">
+              <span class="card-label">Total Retraits</span>
+              <span class="card-value value-positive">+${formatCurrency(totalRetraits)}</span>
             </div>
-            <div class="summary-item">
-              <strong>Solde:</strong>
-              <strong class="${solde >= 0 ? "retrait" : "depense"}">${formatCurrency(solde)}</strong>
+            <div class="card">
+              <span class="card-label">Solde Final</span>
+              <span class="card-value ${solde >= 0 ? "value-positive" : "value-negative"}">${formatCurrency(solde)}</span>
             </div>
           </div>
 
@@ -118,9 +247,9 @@ export function ReportsExport({
               <tr>
                 <th>Date</th>
                 <th>Type</th>
-                <th>Catégorie/Source</th>
+                <th>Catégorie / Source</th>
                 <th>Description</th>
-                <th>Montant</th>
+                <th style="text-align: right">Montant</th>
               </tr>
             </thead>
             <tbody>
@@ -132,7 +261,7 @@ export function ReportsExport({
                   <td>${t.type === "depense" ? "Dépense" : "Retrait"}</td>
                   <td>${t.type === "depense" ? t.categories?.nom || "-" : t.source || "-"}</td>
                   <td>${t.description || "-"}</td>
-                  <td class="${t.type === "depense" ? "depense" : "retrait"}">
+                  <td style="text-align: right" class="${t.type === "depense" ? "value-negative" : "value-positive"}">
                     ${t.type === "depense" ? "-" : "+"}${formatCurrency(t.montant)}
                   </td>
                 </tr>
@@ -142,7 +271,19 @@ export function ReportsExport({
             </tbody>
           </table>
 
-          <script>window.onload = function() { window.print(); }</script>
+          <div class="footer">
+            <p>${settings.export_footer}</p>
+            <p>&copy; ${new Date().getFullYear()} ComptaFlow. Tous droits réservés.</p>
+          </div>
+
+          <script>
+            window.onload = function() { 
+              setTimeout(() => {
+                window.print(); 
+                window.onafterprint = function() { window.close(); }
+              }, 500);
+            }
+          </script>
         </body>
       </html>
     `
@@ -156,17 +297,17 @@ export function ReportsExport({
       <DropdownMenuTrigger asChild>
         <Button variant="outline">
           <Download className="mr-2 h-4 w-4" />
-          Exporter
+          {t("reports.export") || "Exporter"}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={exportToCSV}>
           <FileSpreadsheet className="mr-2 h-4 w-4" />
-          Exporter en CSV (Excel)
+          {t("reports.export_csv") || "Exporter en CSV (Excel)"}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={exportToPDF}>
           <FileText className="mr-2 h-4 w-4" />
-          Exporter en PDF
+          {t("reports.export_pdf") || "Exporter en PDF"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

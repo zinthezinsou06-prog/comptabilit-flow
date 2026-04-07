@@ -68,7 +68,7 @@ export default function InitPage() {
           <CardHeader>
             <CardTitle>Créer les Tables</CardTitle>
             <CardDescription>
-              Initialise les tables categories, depenses, retraits et logs dans votre base de données
+              Initialise les tables categories, depenses, retraits, logs et user_settings dans votre base de données
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

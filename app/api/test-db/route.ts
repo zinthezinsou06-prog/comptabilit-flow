@@ -10,6 +10,13 @@ if (!supabaseUrl || !supabaseKey) {
 
 export async function GET(request: Request) {
   try {
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json(
+        { success: false, error: "Missing Supabase configuration" },
+        { status: 500 }
+      )
+    }
+
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     const results = {
@@ -18,7 +25,7 @@ export async function GET(request: Request) {
     }
 
     // Check if tables exist
-    const tableChecks = ["categories", "depenses", "retraits", "logs"]
+    const tableChecks = ["categories", "depenses", "retraits", "logs", "user_settings"]
 
     for (const table of tableChecks) {
       try {

@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingDown, TrendingUp, Wallet, Activity } from "lucide-react"
+import { useSettings } from "@/components/providers/settings-provider"
 
 interface DashboardStatsProps {
   totalDepenses: number
@@ -14,11 +15,32 @@ export function DashboardStats({
   solde,
   transactionCount,
 }: DashboardStatsProps) {
+  const { settings, t } = useSettings()
+
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
+    const isStandard = settings.currency === "€" || settings.currency === "$" || settings.currency?.length === 3
+    
+    if (isStandard) {
+      const currencyCode = settings.currency === "€" ? "EUR" : settings.currency === "$" ? "USD" : settings.currency
+      try {
+        return new Intl.NumberFormat(settings.language === "en" ? "en-US" : "fr-FR", {
+          style: "currency",
+          currency: currencyCode,
+        }).format(amount)
+      } catch {
+        // Fallback below
+      }
+    }
+    
+    // Custom fallback for symbols like FCFA
+    const formattedAmount = new Intl.NumberFormat(settings.language === "en" ? "en-US" : "fr-FR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount)
+    
+    return settings.language === "en" 
+      ? `${settings.currency} ${formattedAmount}` 
+      : `${formattedAmount} ${settings.currency}`
   }
 
   return (
@@ -26,7 +48,7 @@ export function DashboardStats({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Total Dépenses
+            {t("dashboard.total_expenses") || "Total Dépenses"}
           </CardTitle>
           <TrendingDown className="h-4 w-4 text-destructive" />
         </CardHeader>
@@ -40,7 +62,7 @@ export function DashboardStats({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Total Retraits
+            {t("dashboard.total_withdrawals") || "Total Retraits"}
           </CardTitle>
           <TrendingUp className="h-4 w-4 text-accent" />
         </CardHeader>
@@ -54,7 +76,7 @@ export function DashboardStats({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Solde
+            {t("common.solde") || "Solde"}
           </CardTitle>
           <Wallet className="h-4 w-4 text-primary" />
         </CardHeader>
@@ -68,7 +90,7 @@ export function DashboardStats({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">
-            Transactions
+            {t("common.transactions") || "Transactions"}
           </CardTitle>
           <Activity className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
