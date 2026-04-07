@@ -9,6 +9,7 @@ const withPWA = withPWAInit({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {},
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -16,5 +17,7 @@ const nextConfig = {
     unoptimized: true,
   },
 }
+
+export default nextConfig;
 
 export default withPWA(nextConfig);
