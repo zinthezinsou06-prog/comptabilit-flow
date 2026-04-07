@@ -133,6 +133,6 @@
     background-attachment: fixed;
   }
   .glass-effect {
-    @apply bg-card/70 backdrop-blur-md border border-white/10 shadow-lg !important;
-  }
+  @apply !bg-card/70 !backdrop-blur-md !border !border-white/10 !shadow-lg;
+}
 }
