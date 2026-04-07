@@ -16,11 +16,22 @@ export default async function DashboardLayout({
     redirect("/auth/login")
   }
 
-  const { data: settings } = await supabase
-    .from("user_settings")
-    .select("*")
-    .eq("user_id", user.id)
-    .single()
+  let settings = null
+  try {
+    const { data, error } = await supabase
+      .from("user_settings")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle()
+    
+    if (!error) {
+      settings = data
+    } else {
+      console.error("Erreur lors de la récupération des paramètres:", error.message)
+    }
+  } catch (err) {
+    console.error("Erreur inattendue:", err)
+  }
 
   return (
     <div className="flex min-h-screen">

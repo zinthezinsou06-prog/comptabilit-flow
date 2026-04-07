@@ -37,7 +37,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
       <div className="flex items-center gap-4">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="lg:hidden">
+            <Button variant="ghost" size="icon" className="md:hidden">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Menu</span>
             </Button>
@@ -46,7 +46,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
             <MobileSidebar />
           </SheetContent>
         </Sheet>
-        <h1 className="text-lg font-semibold text-foreground lg:hidden">ComptaFlow</h1>
+        <h1 className="text-lg font-semibold text-foreground md:hidden">ComptaFlow</h1>
       </div>
 
       <DropdownMenu>

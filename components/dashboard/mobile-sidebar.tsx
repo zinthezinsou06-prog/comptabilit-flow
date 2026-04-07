@@ -15,22 +15,25 @@ import {
   Upload,
   HelpCircle,
 } from "lucide-react"
-
-const navigation = [
-  { name: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Dépenses", href: "/dashboard/depenses", icon: Receipt },
-  { name: "Retraits", href: "/dashboard/retraits", icon: ArrowDownCircle },
-  { name: "Catégories", href: "/dashboard/categories", icon: FolderOpen },
-  { name: "Analyse", href: "/dashboard/analyse", icon: TrendingUp },
-  { name: "Outils Avancés", href: "/dashboard/outils", icon: Sparkles },
-  { name: "Import/Export", href: "/dashboard/import-export", icon: Upload },
-  { name: "Rapports", href: "/dashboard/rapports", icon: FileBarChart },
-  { name: "Paramètres", href: "/dashboard/parametres", icon: Settings },
-  { name: "Aide", href: "/dashboard/aide", icon: HelpCircle },
-]
+import { SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { useSettings } from "@/components/providers/settings-provider"
 
 export function MobileSidebar() {
   const pathname = usePathname()
+  const { t } = useSettings()
+
+  const navigation = [
+    { name: t("sidebar.dashboard") || "Tableau de bord", href: "/dashboard", icon: LayoutDashboard },
+    { name: t("sidebar.expenses") || "Dépenses", href: "/dashboard/depenses", icon: Receipt },
+    { name: t("sidebar.withdrawals") || "Retraits", href: "/dashboard/retraits", icon: ArrowDownCircle },
+    { name: t("sidebar.categories") || "Catégories", href: "/dashboard/categories", icon: FolderOpen },
+    { name: t("sidebar.analysis") || "Analyse", href: "/dashboard/analyse", icon: TrendingUp },
+    { name: t("sidebar.tools") || "Outils Avancés", href: "/dashboard/outils", icon: Sparkles },
+    { name: "Import/Export", href: "/dashboard/import-export", icon: Upload },
+    { name: "Rapports", href: "/dashboard/rapports", icon: FileBarChart },
+    { name: t("sidebar.settings") || "Paramètres", href: "/dashboard/parametres", icon: Settings },
+    { name: "Aide", href: "/dashboard/aide", icon: HelpCircle },
+  ]
 
   return (
     <div className="flex h-full flex-col bg-card">
