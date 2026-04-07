@@ -15,22 +15,24 @@ import {
   Upload,
   HelpCircle,
 } from "lucide-react"
-
-const navigation = [
-  { name: "Tableau de bord", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Dépenses", href: "/dashboard/depenses", icon: Receipt },
-  { name: "Retraits", href: "/dashboard/retraits", icon: ArrowDownCircle },
-  { name: "Catégories", href: "/dashboard/categories", icon: FolderOpen },
-  { name: "Analyse", href: "/dashboard/analyse", icon: TrendingUp },
-  { name: "Outils Avancés", href: "/dashboard/outils", icon: Sparkles },
-  { name: "Import/Export", href: "/dashboard/import-export", icon: Upload },
-  { name: "Rapports", href: "/dashboard/rapports", icon: FileBarChart },
-  { name: "Paramètres", href: "/dashboard/parametres", icon: Settings },
-  { name: "Aide", href: "/dashboard/aide", icon: HelpCircle },
-]
+import { useSettings } from "@/components/providers/settings-provider"
 
 export function DashboardSidebar() {
   const pathname = usePathname()
+  const { t } = useSettings()
+
+  const navigation = [
+    { name: t("sidebar.dashboard"), href: "/dashboard", icon: LayoutDashboard },
+    { name: t("sidebar.expenses"), href: "/dashboard/depenses", icon: Receipt },
+    { name: t("sidebar.withdrawals"), href: "/dashboard/retraits", icon: ArrowDownCircle },
+    { name: t("sidebar.categories"), href: "/dashboard/categories", icon: FolderOpen },
+    { name: t("sidebar.analysis"), href: "/dashboard/analyse", icon: TrendingUp },
+    { name: t("sidebar.tools"), href: "/dashboard/outils", icon: Sparkles },
+    { name: "Import/Export", href: "/dashboard/import-export", icon: Upload },
+    { name: "Rapports", href: "/dashboard/rapports", icon: FileBarChart },
+    { name: t("sidebar.settings"), href: "/dashboard/parametres", icon: Settings },
+    { name: "Aide", href: "/dashboard/aide", icon: HelpCircle },
+  ]
 
   return (
     <aside className="hidden w-64 border-r border-border bg-card lg:block">

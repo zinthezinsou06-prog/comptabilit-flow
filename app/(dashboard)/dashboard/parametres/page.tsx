@@ -1,80 +1,157 @@
-import { createClient } from "@/lib/supabase/server"
+"use client"
+
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { createClient } from "@/lib/supabase/client"
+import { useSettings } from "@/components/providers/settings-provider"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { AuditLog } from "@/components/settings/audit-log"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Save, Loader2, Settings } from "lucide-react"
 
-export default async function ParametresPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+const settingsSchema = z.object({
+  currency: z.string().min(1, "La monnaie est requise"),
+  export_header: z.string().optional(),
+  export_footer: z.string().optional(),
+  language: z.string().default("fr"),
+})
 
-  const { data: logs } = await supabase
-    .from("logs")
-    .select("*")
-    .eq("user_id", user?.id)
-    .order("timestamp", { ascending: false })
-    .limit(50)
+export default function ParametresPage() {
+  const { settings, updateSettings, t } = useSettings()
+  const [isLoading, setIsLoading] = useState(false)
+  const supabase = createClient()
+
+  const form = useForm<z.infer<typeof settingsSchema>>({
+    resolver: zodResolver(settingsSchema),
+    defaultValues: {
+      currency: settings.currency,
+      export_header: settings.export_header,
+      export_footer: settings.export_footer,
+      language: settings.language,
+    },
+  })
+
+  async function onSubmit(values: z.infer<typeof settingsSchema>) {
+    setIsLoading(true)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("Non authentifié")
+
+      const { error } = await supabase
+        .from("user_settings")
+        .upsert({ 
+          user_id: user.id, 
+          currency: values.currency,
+          export_header: values.export_header || "",
+          export_footer: values.export_footer || "",
+          language: values.language,
+          updated_at: new Date().toISOString()
+        })
+
+      if (error) throw error
+
+      updateSettings({
+        currency: values.currency,
+        export_header: values.export_header || "",
+        export_footer: values.export_footer || "",
+        language: values.language,
+      })
+
+      alert(t("settings.success"))
+    } catch (error) {
+      console.error(error)
+      alert(t("settings.error"))
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Paramètres</h1>
-        <p className="text-muted-foreground">Gérez les paramètres de votre compte</p>
+        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+          <Settings className="h-8 w-8" />
+          {t("settings.title")}
+        </h1>
+        <p className="mt-2 text-muted-foreground">
+          {t("settings.description")}
+        </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Informations du compte</CardTitle>
-            <CardDescription>Vos informations personnelles</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Email</p>
-              <p className="font-medium text-foreground">{user?.email}</p>
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("settings.global_preferences")}</CardTitle>
+          <CardDescription>
+            {t("settings.global_description")}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            
+            <div className="space-y-2">
+              <Label htmlFor="language">{t("settings.language")}</Label>
+              <Select 
+                defaultValue={form.getValues("language")} 
+                onValueChange={(val) => form.setValue("language", val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="FR / EN" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="fr">Français</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Membre depuis</p>
-              <p className="font-medium text-foreground">
-                {user?.created_at
-                  ? new Date(user.created_at).toLocaleDateString("fr-FR", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                    })
-                  : "-"}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Dernière connexion</p>
-              <p className="font-medium text-foreground">
-                {user?.last_sign_in_at
-                  ? new Date(user.last_sign_in_at).toLocaleDateString("fr-FR", {
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })
-                  : "-"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Statistiques</CardTitle>
-            <CardDescription>Aperçu de votre activité</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Actions enregistrées</p>
-              <p className="text-2xl font-bold text-foreground">{logs?.length || 0}</p>
+            <div className="space-y-2">
+              <Label htmlFor="currency">{t("settings.currency")}</Label>
+              <Input
+                id="currency"
+                placeholder="ex: FCFA, €, $, MAD"
+                {...form.register("currency")}
+              />
+              {form.formState.errors.currency && (
+                <p className="text-sm text-red-500">{form.formState.errors.currency.message}</p>
+              )}
             </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      <AuditLog logs={logs || []} />
+            <div className="space-y-2">
+              <Label htmlFor="export_header">{t("settings.export_header")}</Label>
+              <Input
+                id="export_header"
+                {...form.register("export_header")}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="export_footer">{t("settings.export_footer")}</Label>
+              <Input
+                id="export_footer"
+                {...form.register("export_footer")}
+              />
+            </div>
+
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {t("common.loading")}
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  {t("common.save")}
+                </>
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

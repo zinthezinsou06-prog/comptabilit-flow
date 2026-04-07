@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useSettings } from '@/components/providers/settings-provider'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { CheckCircle2, XCircle, Loader2, Download, Upload, HelpCircle } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { CheckCircle2, XCircle, Loader2, Download } from 'lucide-react'
 
 interface ImportExportTest {
   name: string
@@ -33,6 +34,15 @@ export default function TestImportExportPage() {
   ])
 
   const supabase = createClient()
+  const { settings } = useSettings()
+
+  const formatCSVContent = (baseCSV: string) => {
+    return [
+      settings.export_header ? `"${settings.export_header}"\n\n` : '',
+      baseCSV,
+      settings.export_footer ? `\n\n"${settings.export_footer}"` : ''
+    ].join('')
+  }
 
   const updateTest = (name: string, status: ImportExportTest['status'], message: string) => {
     setTests(prev =>
@@ -66,9 +76,10 @@ export default function TestImportExportPage() {
         d.categorie_id || '',
       ])
 
-      const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
+      const baseCSV = [headers, ...rows].map(r => r.join(',')).join('\n')
+      const csv = formatCSVContent(baseCSV)
 
-      if (csv.length === 0) throw new Error('CSV vide')
+      if (baseCSV.length === 0) throw new Error('CSV vide')
 
       updateTest('Exporter dépenses en CSV', 'success', `${depenses.length} dépenses exportées`)
     } catch (error) {
@@ -102,9 +113,10 @@ export default function TestImportExportPage() {
         r.montant,
       ])
 
-      const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
+      const baseCSV = [headers, ...rows].map(r => r.join(',')).join('\n')
+      const csv = formatCSVContent(baseCSV)
 
-      if (csv.length === 0) throw new Error('CSV vide')
+      if (baseCSV.length === 0) throw new Error('CSV vide')
 
       updateTest('Exporter retraits en CSV', 'success', `${retraits.length} retraits exportés`)
     } catch (error) {
@@ -137,7 +149,8 @@ export default function TestImportExportPage() {
         c.created_at,
       ])
 
-      const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
+      const baseCSV = [headers, ...rows].map(r => r.join(',')).join('\n')
+      const csv = formatCSVContent(baseCSV)
 
       updateTest('Exporter catégories en CSV', 'success', `${categories.length} catégories exportées`)
     } catch (error) {
@@ -172,7 +185,8 @@ export default function TestImportExportPage() {
         JSON.stringify(l.details),
       ])
 
-      const csv = [headers, ...rows].map(r => r.join(',')).join('\n')
+      const baseCSV = [headers, ...rows].map(r => r.join(',')).join('\n')
+      const csv = formatCSVContent(baseCSV)
 
       updateTest('Exporter tous les logs en CSV', 'success', `${logs.length} logs exportés`)
     } catch (error) {

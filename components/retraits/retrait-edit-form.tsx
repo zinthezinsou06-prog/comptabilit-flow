@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { useSettings } from "@/components/providers/settings-provider"
 import { Loader2 } from "lucide-react"
 
 interface Retrait {
@@ -37,6 +38,7 @@ export function RetraitEditForm({ retrait, open, onClose }: RetraitEditFormProps
   const [motif, setMotif] = useState(retrait.motif || "")
   const router = useRouter()
   const supabase = createClient()
+  const { settings } = useSettings()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -99,7 +101,7 @@ export function RetraitEditForm({ retrait, open, onClose }: RetraitEditFormProps
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="montant">Montant (€)</Label>
+            <Label htmlFor="montant">Montant ({settings.currency})</Label>
             <Input
               id="montant"
               type="number"

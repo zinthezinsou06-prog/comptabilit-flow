@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
@@ -6,10 +6,21 @@ import './globals.css'
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' }
+  ],
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+}
+
 export const metadata: Metadata = {
   title: 'ComptaFlow - Gestion Comptable',
   description: 'Application de gestion comptable professionnelle',
   generator: 'v0.app',
+  manifest: '/manifest.json',
   icons: {
     icon: [
       {

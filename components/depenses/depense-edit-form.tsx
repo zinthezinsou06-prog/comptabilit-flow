@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useSettings } from "@/components/providers/settings-provider"
 import { Loader2 } from "lucide-react"
 
 interface Depense {
@@ -50,6 +51,7 @@ export function DepenseEditForm({ depense, categories, open, onClose }: DepenseE
   const [designation, setDesignation] = useState(depense.designation || "")
   const router = useRouter()
   const supabase = createClient()
+  const { settings } = useSettings()
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -112,7 +114,7 @@ export function DepenseEditForm({ depense, categories, open, onClose }: DepenseE
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="montant">Montant (€)</Label>
+            <Label htmlFor="montant">Montant ({settings.currency})</Label>
             <Input
               id="montant"
               type="number"
