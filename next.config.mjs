@@ -5,10 +5,14 @@ const withPWA = withPWAInit({
   disable: process.env.NODE_ENV === "development",
   register: true,
   skipWaiting: true,
+  // Ajouter ceci :
+  customWorkerSrc: false,
+  fallbacks: false,
 });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {},
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -16,6 +20,6 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-}
+};
 
 export default withPWA(nextConfig);
