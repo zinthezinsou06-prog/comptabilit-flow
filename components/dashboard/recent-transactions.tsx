@@ -5,7 +5,7 @@ interface Transaction {
   montant: number
   date: string
   type: "depense" | "retrait"
-  categories?: { nom: string } | null
+  categories?: any
   designation?: string | null
   motif?: string | null
 }

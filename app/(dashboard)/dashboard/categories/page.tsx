@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { CategoriesList } from "@/components/categories/categories-list"
 import { CategoryForm } from "@/components/categories/category-form"
+import { PageHeader } from "@/components/page-header"
 
 export default async function CategoriesPage() {
   const supabase = await createClient()
@@ -15,10 +16,7 @@ export default async function CategoriesPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Catégories</h1>
-          <p className="text-muted-foreground">Gérez vos catégories de dépenses</p>
-        </div>
+        <PageHeader titleKey="categories.title" subtitleKey="categories.subtitle" />
         <CategoryForm />
       </div>
 

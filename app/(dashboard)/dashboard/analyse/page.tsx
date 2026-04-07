@@ -4,6 +4,7 @@ import { TrendAnalysis } from "@/components/analytics/trend-analysis"
 import { CategoryAnalysis } from "@/components/analytics/category-analysis"
 import { Forecasting } from "@/components/analytics/forecasting"
 import { FinancialIndicators } from "@/components/analytics/financial-indicators"
+import { PageHeader } from "@/components/page-header"
 
 export default async function AnalysePage() {
   const supabase = await createClient()
@@ -118,10 +119,7 @@ export default async function AnalysePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Analyse et Prévisions</h1>
-        <p className="text-muted-foreground">Analysez vos données financières et anticipez vos dépenses</p>
-      </div>
+      <PageHeader titleKey="analysis.title" subtitleKey="analysis.subtitle" />
 
       <AnalyticsSummary
         totalDepenses={totalDepenses}

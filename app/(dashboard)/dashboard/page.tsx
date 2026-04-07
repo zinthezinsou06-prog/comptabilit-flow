@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { DashboardStats } from "@/components/dashboard/stats"
 import { DashboardCharts } from "@/components/dashboard/charts"
 import { RecentTransactions } from "@/components/dashboard/recent-transactions"
+import { PageHeader } from "@/components/page-header"
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -78,14 +79,11 @@ export default async function DashboardPage() {
   }))
   const recentTransactions = [...recentDepenses, ...recentRetraits]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 5)
+    .slice(0, 5) as any[]
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Tableau de bord</h1>
-        <p className="text-muted-foreground">Vue d&apos;ensemble de votre comptabilité</p>
-      </div>
+      <PageHeader titleKey="dashboard.title" subtitleKey="dashboard.overview" />
 
       <DashboardStats
         totalDepenses={totalDepenses}

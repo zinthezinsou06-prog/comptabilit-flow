@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { RetraitsList } from "@/components/retraits/retraits-list"
 import { RetraitForm } from "@/components/retraits/retrait-form"
+import { PageHeader } from "@/components/page-header"
 
 export default async function RetraitsPage() {
   const supabase = await createClient()
@@ -15,10 +16,7 @@ export default async function RetraitsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Retraits</h1>
-          <p className="text-muted-foreground">Gérez vos retraits et entrées d&apos;argent</p>
-        </div>
+        <PageHeader titleKey="withdrawals.title" subtitleKey="withdrawals.subtitle" />
         <RetraitForm />
       </div>
 

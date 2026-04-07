@@ -17,6 +17,8 @@ import {
 } from "lucide-react"
 import { useSettings } from "@/components/providers/settings-provider"
 
+import { ThemeToggle } from "@/components/theme-toggle"
+
 export function DashboardSidebar() {
   const pathname = usePathname()
   const { t } = useSettings()
@@ -36,13 +38,14 @@ export function DashboardSidebar() {
 
   return (
     <aside className="hidden w-64 border-r border-border bg-card lg:block">
-      <div className="flex h-16 items-center border-b border-border px-6">
+      <div className="flex h-16 items-center justify-between border-b border-border px-6">
         <Link href="/dashboard" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <span className="text-sm font-bold text-primary-foreground">CF</span>
           </div>
           <span className="text-lg font-semibold text-foreground">ComptaFlow</span>
         </Link>
+        <ThemeToggle />
       </div>
       <nav className="flex flex-col gap-1 p-4">
         {navigation.map((item) => {
